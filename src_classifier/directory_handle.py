@@ -12,6 +12,15 @@ class DirectoryHandle:
     def __init__( self , path ):
         self.path = Path( path )
 
+    def group_dictionary( self ):
+        dictionary = {}
+        count = 0
+        for x in self.path.iterdir():
+            if( x.is_dir() ):
+                dictionary[ count ] = x.name
+                count += 1 
+        return dictionary
+
     # Group path will follow to manage only directory in dept equal 1
     def group_data( self , only_name = False ):
         list_name = []
