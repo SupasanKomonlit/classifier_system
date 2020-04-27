@@ -12,9 +12,9 @@ from keras.layers import Input, Flatten, Dense, Reshape, Lambda
 # Import library for manage model part Convolution Layers
 from keras.layers import Conv2D, Conv2DTranspose
 # Import library for mange model part activatin
-from keras.layers import Activation
+from keras.layers import Activation, ReLU, LeakyReLU
 # Import Library for manage model part Model Object
-from keras.models import Model
+from keras.models import Model, Sequential
 # Import Library for manage model part optimizer
 from keras.optimizers import Adam
 # Import Library about model 
@@ -22,15 +22,15 @@ from keras.utils import plot_model
 # Import library for load model
 from keras.models import load_model
 # Import library operation in Keras tensor object
-from keras import backend as K
-
+#from keras import backend as K
+#K.clear_session()
 #Import library for normal process
 import numpy as np
 
 # ============================== MODEL CREATER FUNCTION ==========================================
 def model_encoder( input_dim, output_dim, 
         l_filters, l_kernels, l_strides, l_padding, 
-        prefix = "encoder_" , activation = "relu"):
+        prefix = "encoder_" , activation = None ):
     encoder_input = Input( shape = input_dim , name = prefix + "input" )
     encoder = encoder_input
     count = 0
@@ -41,8 +41,17 @@ def model_encoder( input_dim, output_dim,
                 strides = strides,
                 padding = padding,
                 name = prefix + "conv2d" + str( count ) )( encoder )
-        encoder = Activation( activation ,
-                name = prefix + "conv2d" + str( count ) + "_" + activation )( encoder )
+        if activation == None :
+            None
+        elif activation == "LeakyReLU":
+            decoder = LeakyReLU( alpha = 0.3,
+                    name = prefix + "conv2d" + str( count ) + "_" + activation )( encoder )
+        elif activation == "ReLU":
+            encoder = ReLU( alpha = 0.3,
+                    name = prefix + "conv2d" + str( count ) + "_" + activation )( encoder )
+        else:
+            encoder = Activation( activation ,
+                    name = prefix + "conv2d" + str( count ) + "_" + activation )( encoder )
     encoder = Flatten( name = prefix + "flatten" )(encoder)
     encoder_output = Dense( output_dim,
                 name = prefix + "output" )( encoder )
@@ -55,7 +64,7 @@ def model_encoder( input_dim, output_dim,
 
 def model_decoder( input_dim, shape_before_flatten, output_channel,
         l_filters, l_kernels, l_strides, l_padding, 
-        prefix = "decoder_" , activation = "relu"):
+        prefix = "decoder_" , activation = None ):
     decoder_input = Input( shape = (input_dim,) , name = prefix + "input" )
     decoder = Dense( np.prod( shape_before_flatten ),
             name = prefix + "input_post")( decoder_input )
@@ -69,8 +78,17 @@ def model_decoder( input_dim, shape_before_flatten, output_channel,
                 strides = strides,
                 padding = padding,
                 name = prefix + "conv2dt" + str( count ) )( decoder )
-        decoder = Activation( activation ,
-                name = prefix + "conv2dt" + str( count ) + "_" + activation )( decoder )
+        if activation == None :
+            None
+        elif activation == "LeakyReLU":
+            decoder = LeakyReLU( alpha = 0.3,
+                    name = prefix + "conv2dt" + str( count ) + "_" + activation )( decoder )
+        elif activation == "ReLU":
+            decoder = ReLU( alpha = 0.3,
+                    name = prefix + "conv2dt" + str( count ) + "_" + activation )( decoder )
+        else:
+            decoder = Activation( activation ,
+                    name = prefix + "conv2dt" + str( count ) + "_" + activation )( decoder )
     decoder_output = Conv2DTranspose( filters = output_channel,
             kernel_size = (3,3),
             strides = 1,
@@ -90,13 +108,13 @@ _PATH_DATA = "/home/zeabus/Documents/supasan/2019_deep_learning/PokemonData"
 _CROP = True
 _COLOR = True
 _RATIO = 8
-_EPOCHES = 1
+_EPOCHES = 40
 _LATENT_SIZE = 64
-_MODEL_NAME = "autoencoder3L64D" # This will use to save model
+_MODEL_NAME = "autoencoder3L64Drelu" # This will use to save model
 _LEARNING_RATE = 0.0005
 _SHOW_SIZE = False
 _VERBOSE = 1 # 0 is silence 1 is process bar and 2 is result
-# =====> Input Parameter
+
 if __name__=="__main__":
     print( "Survey directory of data")
     directory_handle = DirectoryHandle( _PATH_DATA )
@@ -127,7 +145,7 @@ if __name__=="__main__":
             l_strides = [ 1, 2, 1 ], 
             l_padding = ['same', 'same', 'same'],
             prefix = "encoder_",
-            activation = "relu")
+            activation = "relu" )
     encoder_model.summary()
 
     decoder_input, decoder, decoder_output, decoder_model = model_decoder(
@@ -151,49 +169,51 @@ if __name__=="__main__":
             color = _COLOR , crop = _CROP )
     print( "\tSpliiting Data")
     (X_train,Y_train) , (X_test,Y_test) = DataHandle.train_test_split( X_data , Y_data , _RATIO )
+    X_train = np.array( X_train ).astype( np.float ) / 255
+    X_test = np.array( X_test ).astype( np.float ) / 255
 
-# ========> Train autoencoder model
+    # ========> Train autoencoder model
     print( "\nPart Training Model")
-    input( "Start train")
     optimizer = Adam( lr = _LEARNING_RATE )
     autoencoder_model.compile( optimizer = optimizer,
             loss = 'mean_squared_error',
             metrics = ['accuracy'] )
     history = autoencoder_model.fit( [X_train],
             [X_train],
-            valiadation_data = ( [X_test] , [X_test] ),
+            validation_data = ( [X_test] , [X_test] ),
             epochs = _EPOCHES,
             verbose = _VERBOSE )
+    #    print( autoencoder_model.train_on_batch( [X_train] , [X_train] ) )
 
-    input( "Plot History")
     fig_history_autoencoder = plt.figure( "History Training Autoencoder Model " + _MODEL_NAME )
+    fig_history_autoencoder.subplots_adjust( hspace=0.8 , wspace=0.1 )
     sub = fig_history_autoencoder.add_subplot( 2 , 1 , 1 )
     sub.plot( history.history['accuracy'] )
-    sub.plot(history.history['val_accuracy'])
-    sub.title('Model accuracy')
-    sub.ylabel('Accuracy')
-    sub.xlabel('Epoch')
+    sub.plot( history.history['val_accuracy'] )
+    sub.set_title('Model accuracy')
+    sub.set_ylabel('Accuracy')
+    sub.set_xlabel('Epoch')
     sub.legend(['Train', 'Test'], loc='upper left')
-    sub = fig_history_autoencoder.add_subplot( 2 , 1 , 1 )
-    sub.plot(history.history['loss'])
-    sub.plot(history.history['val_loss'])
-    sub.title('Model loss')
-    sub.ylabel('Loss')
-    sub.xlabel('Epoch')
+    sub = fig_history_autoencoder.add_subplot( 2 , 1 , 2 )
+    sub.plot( history.history['loss'] )
+    sub.plot( history.history['val_loss'] )
+    sub.set_title('Model loss')
+    sub.set_ylabel('Loss')
+    sub.set_xlabel('Epoch')
     sub.legend(['Train', 'Test'], loc='upper left')
-    sub.draw()
+    plt.show( block = False )
 
-    random_index = []
-    for _ in range(0,10):
-        random_index.append( np.random.randint( len( X_test)))
-    random_index = tuple( set( random_index ) )
+#    random_index = []
+#    for _ in range(0,10):
+#        random_index.append( np.random.randint( len( X_test)))
+#    random_index = tuple( set( random_index ) )
+    random_index = [ x for x in range( 0 , len( X_test ) , 50 ) ]
     data = []
     for index in random_index :
         data.append( X_test[ index ] )
     data = np.array( data )
-    input( "Plot Compart")
     CommandHandle.plot_compare( data, autoencoder_model,
-        figname = "Compare Result Atuencoder Model " + autoencoder_model.name,
+        figname = "Compare Result Autoencoder Model " + autoencoder_model.name,
         dest_type = np.float )
 
     autoencoder_model.save( autoencoder_model.name + ".h5" )
