@@ -8,6 +8,7 @@
 
 import matplotlib.pyplot as plt
 from numpy import argmax, zeros, floor, ceil
+import numpy as np
 
 def train_test_split( X , Y , ratio ):
     X_train = []
