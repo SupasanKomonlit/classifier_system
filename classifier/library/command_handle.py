@@ -11,6 +11,7 @@ def plot_scatter( x , y , xlabel , ylabel , figname = None , figsize = None ):
     plt.xlabel( xlabel )
     plt.ylabel( ylabel )
     plt.show( block = False )
+    plt.draw()
 
 def plot_compare( data , model , figname = None , figsize = None , dest_type = int , picture = True ):
     n_to_show = len( data[0] ) 

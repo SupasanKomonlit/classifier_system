@@ -30,17 +30,22 @@ import numpy as np
 _ACTIVATION_TYPE = "relu"
 _PREFIX_MODEL = "classifier_"
 _LIST_MODEL = (
-    "autoencoder3L64D" + _ACTIVATION_TYPE, # Classifier on Autoencoder 3 Layer and 64 Latent Vector
-    "autoencoder3L128D" + _ACTIVATION_TYPE, # Classifier on Autoencoder 3 Layer and 128 Latent Vector
-    "autoencoder3L256D" + _ACTIVATION_TYPE, # Classifier on Autoencoder 3 Layer and 256 Latent Vector
-    "autoencoder3L512D" + _ACTIVATION_TYPE, # Classifier on Autoencoder 3 Layer and 512 Latent Vector
-    "autoencoder3L1024D" + _ACTIVATION_TYPE, # Classifier on Autoencoder 3 Layer and 1024 Latent Vector
-    "cnn3L64D" + _ACTIVATION_TYPE, # Classifier on Autoencoder 3 Layer and 64 Latent Vector
-    "cnn3L128D" + _ACTIVATION_TYPE, # Classifier on Autoencoder 3 Layer and 128 Latent Vector
-    "cnn3L256D" + _ACTIVATION_TYPE, # Classifier on Autoencoder 3 Layer and 256 Latent Vector
+#    "autoencoder3L64D" + _ACTIVATION_TYPE,# Classifier on Autoencoder 3 Layer and 64 Latent Vector
+#    "autoencoder3L128D" + _ACTIVATION_TYPE,# Classifier on Autoencoder 3 Layer and 128 Latent Vector
+#    "autoencoder3L256D" + _ACTIVATION_TYPE,# Classifier on Autoencoder 3 Layer and 256 Latent Vector
+    "autoencoder3L512D" + _ACTIVATION_TYPE,# Classifier on Autoencoder 3 Layer and 512 Latent Vector
+    "autoencoder3L1024D" + _ACTIVATION_TYPE,# Classifier on Autoencoder 3 Layer and 1024 Latent Vector
+#    "cnn3L64D" + _ACTIVATION_TYPE, # Classifier on Autoencoder 3 Layer and 64 Latent Vector
+#    "cnn3L128D" + _ACTIVATION_TYPE, # Classifier on Autoencoder 3 Layer and 128 Latent Vector
+#    "cnn3L256D" + _ACTIVATION_TYPE, # Classifier on Autoencoder 3 Layer and 256 Latent Vector
     "cnn3L512D" + _ACTIVATION_TYPE, # Classifier on Autoencoder 3 Layer and 512 Latent Vector
     "cnn3L1024D" + _ACTIVATION_TYPE # Classifier on Autoencoder 3 Layer and 1024 Latent Vector
 )
+
+_PATH_DATA = "/home/zeabus/Documents/supasan/2019_deep_learning/PokemonData"
+_CROP = True
+_COLOR = True
+_SHOW_SIZE = False
 
 # Readme This file will can use only case model use all layers function for activation and calculate
 #   Base on Keras library
@@ -56,15 +61,29 @@ if __name__ == "__main__":
     list_label , list_data = directory_handle.group_data()
     list_dictionary = directory_handle.group_dictionary()
 
+    if _SHOW_SIZE : 
+        width = []
+        height = []
+        for data in list_data:
+            width , height = ImageHandle.read_size( data , width, height )
+
+        CommandHandle.plot_scatter( width , height, 
+                "width (pixel)" , "height (pixel)", 
+                figname = "picture_size")
+
+    square_size = ImageHandle.min_all_square_size1( list_data )
+    square_size = square_size if square_size % 2 == 0 else square_size - 1
+    print( f'This program parameter to input image is\n\tColor Image : {_COLOR}\n\tCrop Image : {_CROP}\n\tSquare size : {square_size}')
+
     print( "\nPart Prepare Data\n\tDownloading Data" )
     X_data, Y_data = ImageHandle.prepare_label_data( list_label, list_data, square_size, 
             color = _COLOR , crop = _CROP )
     X_data = np.array( X_data ).astype( np.float ) / 255
-    Y_data = np.araay( Y_data )
+    Y_data = np.array( Y_data )
 
     accuracy_result = []
     for model in model_classifier:
-        Y_predict = model.predict()
+        Y_predict = model.predict( X_data )
         accuracy_result.append( DataHandle.get_accuracy_classifier( Y_predict, 
                 Y_data,
                 list_dictionary ) )
@@ -74,5 +93,7 @@ if __name__ == "__main__":
         plt.plot( accuracy )
     plt.legend( _LIST_MODEL )
     plt.xlabel( "Name Data Set")
-    plt.ylable( "Accuracy")
-    plt.tile( "Grap Accuracy Each Model")
+    plt.ylabel( "Accuracy")
+    plt.title( "Grap Accuracy Each Model")
+
+    plt.show()
