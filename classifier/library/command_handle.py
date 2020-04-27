@@ -3,6 +3,7 @@
 # REFERENCE
 
 import matplotlib.pyplot as plt
+import image_handle as ImageHandle
 from numpy import floor, ceil
 
 def plot_scatter( x , y , xlabel , ylabel , figname = None , figsize = None ):
@@ -33,14 +34,16 @@ def plot_compare( data , model , figname = None , figsize = None , dest_type = i
     fig.subplots_adjust( hspace=0.1 , wspace=0.1 )
                                
     for i in range(n_to_show): 
-        img = data[i].squeeze()
+#        img = data[i].squeeze()
+        img = ImageHandle.normalize_image( data[i] , copy = True , dest_type = float ).squeeze()
         sub = fig.add_subplot( n_row , n_column, 
                 int( floor( i / n_column)*n_offset ) + ( i % n_column ) + 1)
         sub.axis('off')        
         sub.imshow(img)        
                                
     for i in range(n_to_show): 
-        img = result[i].squeeze()
+#        img = result[i].squeeze()
+        img = ImageHandle.normalize_image( result[i] , copy = True , dest_type = float ).squeeze()
         sub = fig.add_subplot( n_row , n_column,
                 int( floor( i / n_column)*n_offset ) + ( n_column + ( i % n_column ) + 1 ) )
         sub.axis('off')        

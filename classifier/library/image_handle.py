@@ -9,6 +9,22 @@ from PIL import Image
 from numpy import floor, ceil
 import matplotlib.image as mping # This will bring image file to represent by numpy array
 
+def normalize_image( src , copy = True , dest_type = float ):
+    result = np.copy( src ) if copy else src
+    min_value = np.min( result )
+    result -= min_value
+    max_value = np.max( result )
+    result = result.astype( np.float ) 
+    result /= max_value
+    if dest_type == float:
+        None
+    elif dest_type == int :
+        result *= 255
+        result = result.astype( np.int )
+    else:
+        print( "Fatal can't return image" )
+    return result 
+
 def read_size( list_name , width = [] , height = []):
     for name in list_name:
         img = Image.open( name )
