@@ -1,3 +1,5 @@
+# FILE      : convolution_train.py
+
 # Import Library help operation
 from library.directory_handle import DirectoryHandle
 import library.image_handle as ImageHandle
@@ -120,8 +122,8 @@ _COLOR = True
 _RATIO = 8
 _EPOCHES = 50
 _LATENT_SIZE = 64
-_MODEL_NAME = "cnn3L64Drelu" # This will use to save model
-_LEARNING_RATE = 0.0001
+_MODEL_NAME = "classifier_cnn3L64Drelu" # This will use to save model
+_LEARNING_RATE = 0.0005
 _DROP_RATE = 0.2
 _SHOW_SIZE = False
 _VERBOSE = 1 # 0 is silence 1 is process bar and 2 is result
@@ -144,7 +146,7 @@ if __name__=="__main__":
 
     square_size = ImageHandle.min_all_square_size1( list_data )
     square_size = square_size if square_size % 2 == 0 else square_size - 1
-    print( f'This program parameter to input image is\n\tColor Image : {_COLOR}\n\tCrop Image :{_CROP}\n\tSquare size : {square_size}')
+    print( f'This program parameter to input image is\n\tColor Image : {_COLOR}\n\tCrop Image : {_CROP}\n\tSquare size : {square_size}')
 
     input_dim = ( square_size , square_size , 3 if _COLOR else 1 )
 
@@ -173,6 +175,7 @@ if __name__=="__main__":
 
     cnn_classifier_model = Model( convolution_input ,
             connected_model( convolution_model( convolution_input ) ) )
+    cnn_classifier_model.name = _MODEL_NAME
     cnn_classifier_model.summary()
 
     print( "\nPart Prepare Data\n\tDownloading Data" )
@@ -195,7 +198,9 @@ if __name__=="__main__":
             epochs = _EPOCHES,
             verbose = _VERBOSE )
 
-    fig_history_autoencoder = plt.figure( "History Training Autoencoder Model " + _MODEL_NAME )
+    cnn_classifier_model.save( cnn_classifier_model.name + ".h5")
+
+    fig_history_autoencoder = plt.figure( "History Training CNN Classifier Model " + _MODEL_NAME )
     fig_history_autoencoder.subplots_adjust( hspace=0.8 , wspace=0.1 )
     sub = fig_history_autoencoder.add_subplot( 2 , 1 , 1 )
     sub.plot( history.history['accuracy'] )

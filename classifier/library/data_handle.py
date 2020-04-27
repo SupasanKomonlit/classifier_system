@@ -95,21 +95,32 @@ def plot_compare( data , model , figsize = None , dest_type = int , picture = Tr
 
 def result_classifier( predict , actual , dictionary ):
     print(f'Report classifier system {predict.shape[0]} datas')
-    recall = zeros( len( dictionary ) ) # Count data have revel
-    precision = zeros( len(dictionary ) ) # Count data have to predict
-    correct = zeros( len(dictionary ) ) # Count collect data
+    recall = zeros( len( dictionary ) ).astype( np.float ) # Count data have revel
+    precision = zeros( len(dictionary ) ).astype( np.float ) # Count data have to predict
+    correct = zeros( len(dictionary ) ).astype( np.float ) # Count collect data
     for run in range( 0 , predict.shape[0] ):
         index_predict = argmax( predict[run] )
         index_actual = argmax( actual[run] )
         if index_predict == index_actual :
-            correct[ index_predict ] += 1
-        recall[ index_actual ] += 1
-        precision[ index_predict ] +=1
+            correct[ index_predict ] += 1.
+        recall[ index_actual ] += 1.
+        precision[ index_predict ] += 1.
     print(f'Summary correct {sum(correct)} datas from {sum(precision)} datas')
     print(f'{"Name":25}|{"":6}PRECISION |{"":9}RECALL')
     print('-------------------------------------------------------------------------------')
     for run in range( 0 , len(dictionary) ):
-        if( recall[ run ] == 0 ): continue
+        if( np.equal( recall[ run ] , 0 ) ): continue
         precision[ run ] = correct[run] / precision[ run ] 
         recall[ run ] = correct[ run ] / recall[ run ]
         print(f'{dictionary[run]:25}|{precision[run]:15.5f} |{recall[run]:15.5f}')
+
+def get_accuracy_classifier( predict , actual , dictionary ):
+    correct = zeros( len( dictionary ) )
+    recall = zeros( len( dictionary ) )
+    for run in range( 0 , predict.shape[0] ):
+        index_predict = argmax( predict[ run ] )
+        index_actual = argmax( actual[ run ] )
+        if index_predict == index_actual:
+            correct[ index_predict ] += 1
+        recall[ index_actual ] += 1
+    return correct / recall

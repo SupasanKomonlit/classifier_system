@@ -1,3 +1,5 @@
+# File Name : autoencoder_classifier_train.py
+
 # Import Library help operation
 from library.directory_handle import DirectoryHandle
 import library.image_handle as ImageHandle
@@ -36,11 +38,11 @@ _PATH_DATA = "/home/zeabus/Documents/supasan/2019_deep_learning/PokemonData"
 _CROP = True
 _COLOR = True
 _RATIO = 8
-_EPOCHES = 50
-_LATENT_SIZE = 256
-_MODEL_AUTOENCODER = "autoencoder3L256Drelu"
-_MODEL_NAME = "classifier" + _MODEL_AUTOENCODER
-_LEARNING_RATE = 0.0001
+_EPOCHES = 100
+_LATENT_SIZE = 1024
+_MODEL_AUTOENCODER = "autoencoder3L1024Drelu"
+_MODEL_NAME = "classifier_" + _MODEL_AUTOENCODER
+_LEARNING_RATE = 0.0005
 _DROP_RATE = 0.2
 _SHOW_SIZE = False
 _VERBOSE = 1 # 0 is silence 1 is process bar and 2 is result
@@ -87,3 +89,47 @@ if __name__=="__main__":
     classifier_model = Model( encoder_input , connected_model( encoder_model( encoder_input ) ) )
     classifier_model.name = _MODEL_NAME
     classifier_model.summary()
+
+    print( "\nPart Prepare Data\n\tDownloading Data" )
+    X_data, Y_data = ImageHandle.prepare_label_data( list_label, list_data, square_size, 
+            color = _COLOR , crop = _CROP )
+    print( "\tSpliiting Data")
+    (X_train,Y_train) , (X_test,Y_test) = DataHandle.train_test_split( X_data , Y_data , _RATIO )
+    X_train = np.array( X_train ).astype( np.float ) / 255
+    X_test = np.array( X_test ).astype( np.float ) / 255
+
+    # ========> Train autoencoder model
+    print( "\nPart Training Model")
+    optimizer = Adam( lr = _LEARNING_RATE )
+    classifier_model.compile( optimizer = optimizer,
+            loss = 'categorical_crossentropy',
+            metrics = ['accuracy'] )
+    history = classifier_model.fit( [X_train],
+            [Y_train],
+            validation_data = ( [X_test] , [Y_test] ),
+            epochs = _EPOCHES,
+            verbose = _VERBOSE )
+    #    print( autoencoder_model.train_on_batch( [X_train] , [X_train] ) )
+
+    fig_history_autoencoder = plt.figure( "History Training Autoencoder Classifier Model " + _MODEL_NAME )
+    fig_history_autoencoder.subplots_adjust( hspace=0.8 , wspace=0.1 )
+    sub = fig_history_autoencoder.add_subplot( 2 , 1 , 1 )
+    sub.plot( history.history['accuracy'] )
+    sub.plot( history.history['val_accuracy'] )
+    sub.set_title('Model accuracy')
+    sub.set_ylabel('Accuracy')
+    sub.set_xlabel('Epoch')
+    sub.legend(['Train', 'Test'], loc='upper left')
+    sub = fig_history_autoencoder.add_subplot( 2 , 1 , 2 )
+    sub.plot( history.history['loss'] )
+    sub.plot( history.history['val_loss'] )
+    sub.set_title('Model loss')
+    sub.set_ylabel('Loss')
+    sub.set_xlabel('Epoch')
+    sub.legend(['Train', 'Test'], loc='upper left')
+    plt.show( block = False )
+
+    print( f'Save model to ./{classifier_model.name}.h5' )
+    classifier_model.save( classifier_model.name + ".h5" )
+
+    plt.show()
