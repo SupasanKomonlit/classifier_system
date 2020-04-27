@@ -122,11 +122,12 @@ _COLOR = True
 _RATIO = 8
 _EPOCHES = 50
 _LATENT_SIZE = 1024
-_MODEL_NAME = "classifier_cnn3L1024Drelu" # This will use to save model
+_MODEL_NAME = "classifier_cnn3L1024D" # This will use to save model
 _LEARNING_RATE = 0.0005
 _DROP_RATE = 0.2
 _SHOW_SIZE = False
 _VERBOSE = 1 # 0 is silence 1 is process bar and 2 is result
+_ACTIVATION = None
 
 if __name__=="__main__":
     print( "Survey directory of data")
@@ -163,7 +164,7 @@ if __name__=="__main__":
             pool_size = (2,2) , pool_padding = "valid", 
             pool_strides = None,
             prefix = "convolution_",
-            activation = "relu" )
+            activation = _ACTIVATION )
     convolution_model.summary()
 
     connected_input, connected, connected_output, connected_model = model_connected(

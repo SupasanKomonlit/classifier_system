@@ -88,9 +88,11 @@ if __name__ == "__main__":
                 Y_data,
                 list_dictionary ) )
 
+    print( f'====> Result of Model from {len(list_label)} label and {X_data.shape[0]} data')
     fig = plt.figure( "Compare Accuracy of Classifier Model" )
-    for accuracy in accuracy_result :
+    for accuracy, model_name  in zip( accuracy_result , _LIST_MODEL ):
         plt.plot( accuracy )
+        print( f'Model {model_name:25} have average accuracy {np.mean( accuracy):10.5f}/1' )
     plt.legend( _LIST_MODEL )
     plt.xlabel( "Name Data Set")
     plt.ylabel( "Accuracy")

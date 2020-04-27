@@ -94,8 +94,17 @@ def model_decoder( input_dim, shape_before_flatten, output_channel,
             strides = 1,
             padding = padding,
             name = prefix + "output" )( decoder )
-    decoder_output = Activation( activation,
-                name = prefix + "output_" + activation )( decoder_output )
+    if activation == None :
+        None
+    elif activation == "LeakyReLU":
+        decoder_output = LeakyReLU( alpha = 0.3,
+                name = prefix + "conv2dt" + str( count ) + "_" + activation )( decoder_output )
+    elif activation == "ReLU":
+        decoder_output = ReLU( alpha = 0.3,
+                name = prefix + "conv2dt" + str( count ) + "_" + activation )( decoder_output )
+    else:
+        decoder_output = Activation( activation ,
+                name = prefix + "conv2dt" + str( count ) + "_" + activation )( decoder_output )
 
     decoder_model = Model( decoder_input , decoder_output )
     decoder_model.name = prefix + "model"
@@ -109,11 +118,12 @@ _CROP = True
 _COLOR = True
 _RATIO = 8
 _EPOCHES = 40
-_LATENT_SIZE = 512
-_MODEL_NAME = "autoencoder3L512Drelu" # This will use to save model
+_LATENT_SIZE = 256
+_MODEL_NAME = "autoencoder3L256D" # This will use to save model
 _LEARNING_RATE = 0.0005
 _SHOW_SIZE = False
 _VERBOSE = 1 # 0 is silence 1 is process bar and 2 is result
+_ACTIVATION = None
 
 if __name__=="__main__":
     print( "Survey directory of data")
@@ -145,7 +155,7 @@ if __name__=="__main__":
             l_strides = [ 1, 2, 1 ], 
             l_padding = ['same', 'same', 'same'],
             prefix = "encoder_",
-            activation = "relu" )
+            activation = _ACTIVATION )
     encoder_model.summary()
 
     decoder_input, decoder, decoder_output, decoder_model = model_decoder(
@@ -157,7 +167,7 @@ if __name__=="__main__":
             l_strides = [ 1, 2, 1 ], 
             l_padding = ['same', 'same', 'same'],
             prefix = "decoder_",
-            activation = "relu" )
+            activation = _ACTIVATION )
     decoder_model.summary()
 
     autoencoder_model = Model( encoder_input , decoder_model( encoder_model( encoder_input ) ) )
