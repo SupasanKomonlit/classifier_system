@@ -117,9 +117,9 @@ _PATH_DATA = "/home/zeabus/Documents/supasan/2019_deep_learning/PokemonData"
 _CROP = True
 _COLOR = True
 _RATIO = 8
-_EPOCHES = 40
-_LATENT_SIZE = 256
-_MODEL_NAME = "autoencoder3L256D" # This will use to save model
+_EPOCHES = 30
+_LATENT_SIZE = 1024
+_MODEL_NAME = "autoencoder3L1024D" # This will use to save model
 _LEARNING_RATE = 0.0005
 _SHOW_SIZE = False
 _VERBOSE = 1 # 0 is silence 1 is process bar and 2 is result
@@ -193,7 +193,9 @@ if __name__=="__main__":
             validation_data = ( [X_test] , [X_test] ),
             epochs = _EPOCHES,
             verbose = _VERBOSE )
-    #    print( autoencoder_model.train_on_batch( [X_train] , [X_train] ) )
+    
+    print( f'Save Model to {autoencoder_model.name}.h5' )
+    autoencoder_model.save( autoencoder_model.name + ".h5" )
 
     fig_history_autoencoder = plt.figure( "History Training Autoencoder Model " + _MODEL_NAME )
     fig_history_autoencoder.subplots_adjust( hspace=0.8 , wspace=0.1 )
@@ -226,6 +228,4 @@ if __name__=="__main__":
         figname = "Compare Result Autoencoder Model " + autoencoder_model.name,
         dest_type = np.float )
 
-    autoencoder_model.save( autoencoder_model.name + ".h5" )
-                              
     plt.show() 

@@ -3,8 +3,24 @@
 # REFERENCE
 
 import matplotlib.pyplot as plt
-import image_handle as ImageHandle
 from numpy import floor, ceil
+import numpy as np
+
+def normalize_image( src , copy = True , dest_type = float ):
+    result = np.copy( src ) if copy else src
+    min_value = np.min( result )
+    result -= min_value
+    max_value = np.max( result )
+    result = result.astype( np.float ) 
+    result /= max_value
+    if dest_type == float:
+        None
+    elif dest_type == int :
+        result *= 255
+        result = result.astype( np.int )
+    else:
+        print( "Fatal can't return image" )
+    return result 
 
 def plot_scatter( x , y , xlabel , ylabel , figname = None , figsize = None ):
     fig_scatter = plt.figure( figname , figsize = figsize )
@@ -35,7 +51,7 @@ def plot_compare( data , model , figname = None , figsize = None , dest_type = i
                                
     for i in range(n_to_show): 
 #        img = data[i].squeeze()
-        img = ImageHandle.normalize_image( data[i] , copy = True , dest_type = float ).squeeze()
+        img = normalize_image( data[i] , copy = True , dest_type = float ).squeeze()
         sub = fig.add_subplot( n_row , n_column, 
                 int( floor( i / n_column)*n_offset ) + ( i % n_column ) + 1)
         sub.axis('off')        
@@ -43,9 +59,10 @@ def plot_compare( data , model , figname = None , figsize = None , dest_type = i
                                
     for i in range(n_to_show): 
 #        img = result[i].squeeze()
-        img = ImageHandle.normalize_image( result[i] , copy = True , dest_type = float ).squeeze()
+        img = normalize_image( result[i] , copy = True , dest_type = float ).squeeze()
         sub = fig.add_subplot( n_row , n_column,
                 int( floor( i / n_column)*n_offset ) + ( n_column + ( i % n_column ) + 1 ) )
         sub.axis('off')        
         sub.imshow(img) 
+    plt.draw()
     plt.show( block = False )

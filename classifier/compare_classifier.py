@@ -50,6 +50,7 @@ _SHOW_SIZE = False
 # Readme This file will can use only case model use all layers function for activation and calculate
 #   Base on Keras library
 if __name__ == "__main__":
+    plt.ion()
     model_classifier = []
     print( "Downloading model")
     for model_name in _LIST_MODEL:
