@@ -117,17 +117,17 @@ def model_connected( input_dim, output_dim, output_activation,
 # ============================ MAIN FUNCTION TO RUN PROGRAM =====================================+
 # =====> PARAMETER
 _PATH_DATA = "/home/zeabus/Documents/supasan/2019_deep_learning/PokemonData"
-_CROP = True
+_CROP = False
 _COLOR = True
 _RATIO = 8
 _EPOCHES = 30
 _LATENT_SIZE = 1024
-_MODEL_NAME = "classifier_cnn3L1024DLeakReLU" # This will use to save model
+_MODEL_NAME = "classifier_nC_cnn3L1024Drelu" # This will use to save model
 _LEARNING_RATE = 0.0005
 _DROP_RATE = 0.2
 _SHOW_SIZE = False
 _VERBOSE = 1 # 0 is silence 1 is process bar and 2 is result
-_ACTIVATION = "LeakyReLU"
+_ACTIVATION = "relu"
 
 if __name__=="__main__":
     print( "Survey directory of data")

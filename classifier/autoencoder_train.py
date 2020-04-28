@@ -47,7 +47,7 @@ def model_encoder( input_dim, output_dim,
             encoder = LeakyReLU( alpha = 0.3,
                     name = prefix + "conv2d" + str( count ) + "_" + activation )( encoder )
         elif activation == "ReLU":
-            encoder = ReLU( alpha = 0.3,
+            encoder = ReLU( max_value = 1,
                     name = prefix + "conv2d" + str( count ) + "_" + activation )( encoder )
         else:
             encoder = Activation( activation ,
@@ -84,7 +84,7 @@ def model_decoder( input_dim, shape_before_flatten, output_channel,
             decoder = LeakyReLU( alpha = 0.3,
                     name = prefix + "conv2dt" + str( count ) + "_" + activation )( decoder )
         elif activation == "ReLU":
-            decoder = ReLU( alpha = 0.3,
+            decoder = ReLU( max_value = 1,
                     name = prefix + "conv2dt" + str( count ) + "_" + activation )( decoder )
         else:
             decoder = Activation( activation ,
@@ -114,16 +114,16 @@ def model_decoder( input_dim, shape_before_flatten, output_channel,
 # ============================ MAIN FUNCTION TO RUN PROGRAM =====================================+
 # =====> PARAMETER
 _PATH_DATA = "/home/zeabus/Documents/supasan/2019_deep_learning/PokemonData"
-_CROP = True
+_CROP = False
 _COLOR = True
 _RATIO = 8
 _EPOCHES = 30
 _LATENT_SIZE = 1024
-_MODEL_NAME = "autoencoder3L1024DLeakyReLU" # This will use to save model
+_MODEL_NAME = "nC_autoencoder3L1024Drelu" # This will use to save model
 _LEARNING_RATE = 0.0005
 _SHOW_SIZE = False
 _VERBOSE = 1 # 0 is silence 1 is process bar and 2 is result
-_ACTIVATION = "LeakyReLU"
+_ACTIVATION = "relu"
 
 if __name__=="__main__":
     print( "Survey directory of data")

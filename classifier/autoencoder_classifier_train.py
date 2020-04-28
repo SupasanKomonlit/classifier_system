@@ -35,12 +35,12 @@ import numpy as np
 from convolution_train import model_connected
 
 _PATH_DATA = "/home/zeabus/Documents/supasan/2019_deep_learning/PokemonData"
-_CROP = True
+_CROP = False
 _COLOR = True
 _RATIO = 8
 _EPOCHES = 60
-_LATENT_SIZE = 512
-_MODEL_AUTOENCODER = "autoencoder3L512DLeakyReLU"
+_LATENT_SIZE = 1024
+_MODEL_AUTOENCODER = "nC_autoencoder3L1024Drelu"
 _MODEL_NAME = "classifier_" + _MODEL_AUTOENCODER
 _LEARNING_RATE = 0.0005
 _DROP_RATE = 0.2
