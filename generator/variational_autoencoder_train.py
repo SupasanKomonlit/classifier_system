@@ -36,7 +36,7 @@ _COLOR = True
 _RATIO = 8
 _EPOCHES = 30
 _LATENT_SIZE = 1024
-_ACTIVATION = "LeakyReLU"
+_ACTIVATION = "relu"
 _MODEL_NAME = "VAE3L1024D" # This will use to save model
 if _ACTIVATION != None : _MODEL_NAME += _ACTIVATION
 _LEARNING_RATE = 0.0005 # For use in optimizer
@@ -213,7 +213,7 @@ if __name__ == "__main__":
             validation_data = ( [X_test] , [X_test] ),
             epochs = _EPOCHES )
 
-    fig_history_autoencoder = plt.figure( "History Training Autoencoder Model " + _MODEL_NAME )
+    fig_history_loss = plt.figure( "History Loss of Training Model " + _MODEL_NAME )
     # Plot traing & validation loss
     plt.plot(history.history['loss'])
     plt.plot(history.history['val_loss'])
@@ -224,6 +224,7 @@ if __name__ == "__main__":
     plt.show( block = False )
 
     # Plot training & validation Mean Square loss values
+    fig_history_rms_loss = plt.figure( "History RMS Loss of Training Model " + _MODEL_NAME )
     plt.plot(history.history['r_loss'])
     plt.plot(history.history['val_r_loss'])
     plt.title('Model Mean Square loss')
@@ -232,6 +233,7 @@ if __name__ == "__main__":
     plt.legend(['Train', 'Test'], loc='upper left')
     plt.show( block = False )
 
+    fig_history_kl_loss = plt.figure( "History KL Loss of Training Model " + _MODEL_NAME )
     # Plot training & validation kl loss values
     plt.plot(history.history['kl_loss'])
     plt.plot(history.history['val_kl_loss'])
@@ -240,5 +242,16 @@ if __name__ == "__main__":
     plt.xlabel('Epoch')
     plt.legend(['Train', 'Test'], loc='upper left')
     plt.show( block = False )
+
+    vae_autoencoder_model.save_weights( _MODEL_NAME + "_weights.h5" )
+
+    sample_index = [ x for x in range( 0 , len( X_test ) , int( np.ceil( ) ) ) ]
+    data = []
+    for index in sample_index :
+        data.append( X_test[ index ] )
+    data = np.array( data )
+    CommandHandle.plot_compare( data, vae_autoencoder_model,
+        figname = "Compare Result Autoencoder Model " + vae_autoencoder_model.name,
+        dest_type = np.float )
 
     plt.show()
