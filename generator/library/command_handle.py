@@ -66,3 +66,29 @@ def plot_compare( data , model , figname = None , figsize = None , dest_type = i
         sub.imshow(img) 
     plt.draw()
 #    plt.show( block = False )
+
+def plot( data , model , figsize = None , dest_type = int ):
+    result = model.predict( data ).astype( dest_type )
+    
+    n_to_show = result.shape[0]
+    n_column = 10
+    n_offset = 10
+    n_row = int( (floor( n_to_show / n_column ) + 1 ) * 2 ) 
+    
+    width = 0
+    height = 0
+    for run in range( n_column ):
+        width = result[run].shape[0] if width < result[run].shape[0] else width
+        height = result[run].shape[1] if height < result[run].shape[1] else height
+
+    fig = plt.figure( "Result of mode name " + model.name, 
+            figsize = figsize if figsize != None else ( width , height ) )
+    fig.subplots_adjust( hspace=0.1 , wspace=0.1 )
+                               
+    for i in range(n_to_show): 
+        img = normalize_image( result[i] , copy = True , dest_type = dest_type ).squeeze()
+        sub = fig.add_subplot( n_row , n_column, 
+                int( floor( i / n_column)*n_offset ) + ( i % n_column ) + 1)
+        sub.axis('off')        
+        sub.imshow(img)
+    plt.draw() 

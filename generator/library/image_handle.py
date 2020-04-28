@@ -83,7 +83,7 @@ def read_reshape_square( name , target_size , color = True ):
             src = cv2.cvtColor( src , cv2.COLOR_BGR2RGB )
         else :
             src = cv2.imread( name , cv2.IMREAD_GRAYSCALE)
-        answer = cv2.resize( src , ( target_size , target_size ) )
+        answer = cv2.resize( src , ( target_size , target_size ) , interpolation = cv2.INTER_AREA )
         if not color :
             new_answer = []
             for row in answer:
@@ -152,10 +152,10 @@ def prepare_label_data( list_label , list_data , square_size , color = True , cr
                 Y.append( result )
     return X , Y
 
-def read_all_data( list_name , squater_size , color = True , crop = True ):
+def read_all_data( list_name , square_size , color = True , crop = True ):
     X = []
     for name in list_name:
-        ok , data = read_crop_reshape_square( name , squater_size , color ) if crop else read_reshape_square( name , squater_size , color )
+        ok , data = read_crop_reshape_square( name , square_size , color ) if crop else read_reshape_square( name , square_size , color )
         if ok:
             X.append( data )
     return X

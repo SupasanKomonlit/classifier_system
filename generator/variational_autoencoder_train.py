@@ -100,7 +100,7 @@ def model_vae_encoder( input_dim, output_dim,
     vae_encoder_model.name = prefix + "model"
     shape_before_flatten = vae_encoder_model.layers[ -5 ].output_shape[1:]
 
-    return vae_encoder_input, vae_encoder, vae_encoder_output, vae_encoder_model, shape_before_flatten
+    return vae_encoder_input, vae_encoder, vae_encoder_output, vae_encoder_model, shape_before_flatten, mean_layer, variance_layer
 
 def model_decoder( input_dim, shape_before_flatten, output_channel,
         l_filters, l_kernels, l_strides, l_padding, 
@@ -146,12 +146,21 @@ def model_decoder( input_dim, shape_before_flatten, output_channel,
         decoder_output = Activation( activation ,
                 name = prefix + "output_" + activation )( decoder_output )
 
+    decoder_model = Model( decoder_input , decoder_output )
+    decoder_model.name = prefix + "model"
+
+    return decoder_input , decoder , decoder_output, decoder_model 
+
+# ===================> PART MAIN PROGRAM
+
 if __name__ == "__main__":
 
     directory_handle = DirectoryHandle( _PATH_DATA )
     list_file = directory_handle.get_all_file()
 
     width, height = ImageHandle.read_size( list_file )
+    width = np.array( width )
+    height = np.array( height )
     if _SHOW_SIZE :
         CommandHandle.plot_scatter( width , height, 
                 "width (pixel)" , "height (pixel)", 
@@ -164,9 +173,10 @@ if __name__ == "__main__":
     square_size = square_size if square_size % 2 == 0 else square_size + 1
     print( f'This program parameter to input image is\n\tColor Image : {_COLOR}\n\tCrop Image : {_CROP}\n\tSquare size : {square_size}')
 
+## START PART SETUP MODEL
     print( f'Part Setup Model Object')
     input_dim = ( square_size , square_size , 3 if _COLOR else 1 )
-    vae_encoder_input, vae_encoder, vae_encoder_output, vae_encoder_model, shape_before_flatten = model_vae_encoder(
+    vae_encoder_input, vae_encoder, vae_encoder_output, vae_encoder_model, shape_before_flatten, mean_layer, variance_layer= model_vae_encoder(
             input_dim = input_dim,
             output_dim = _LATENT_SIZE,
             l_filters = [ 64, 32, 16 ], 
@@ -194,18 +204,20 @@ if __name__ == "__main__":
     vae_autoencoder_model.name = _MODEL_NAME
     vae_autoencoder_model.summary()
 
+## END PART SETUP MODEL
+
     print( f'Prepare Data')
     print( f'\tDowloading....' )
     X_data = ImageHandle.read_all_data( list_file , square_size , color = _COLOR , crop = _CROP )
     print( f'\tSplitting.....' )
-    X_train, X_test = DataHandle.split_data.( X_data , 18 )
+    X_train, X_test = DataHandle.split_data( X_data , 18 )
     X_train = np.array( X_train ).astype( float ) / 255
     X_test = np.array( X_test ).astype( float ) / 255
 
     print( f'Start Training Model' )
     optimizer = Adam( lr = _LEARNING_RATE )
     vae_autoencoder_model.compile( optimizer = optimizer,
-            loss = totol_loss,
+            loss = total_loss,
             metrics = [ r_loss , kl_loss ] )
 
     history = vae_autoencoder_model.fit( [ X_train ],
@@ -253,5 +265,8 @@ if __name__ == "__main__":
     CommandHandle.plot_compare( data, vae_autoencoder_model,
         figname = "Compare Result Autoencoder Model " + vae_autoencoder_model.name,
         dest_type = np.float )
+
+    latent_random = np.random.normal( _MEAN , _STDDEV , size = ( 30, _LATENT_SIZE ) )
+    CommandHandle.plot( latent_random , decoder_model , dest_type = float )
 
     plt.show()
