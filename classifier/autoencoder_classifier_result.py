@@ -38,17 +38,16 @@ _PATH_DATA = "/home/zeabus/Documents/supasan/2019_deep_learning/PokemonData"
 _CROP = True
 _COLOR = True
 _RATIO = 8
-_EPOCHES = 100
-_LATENT_SIZE = 1024
-_MODEL_AUTOENCODER = "autoencoder3L1024Drelu"
+_EPOCHES = 50
+_LATENT_SIZE = 256
+_MODEL_AUTOENCODER = "autoencoder3L256D"
 _MODEL_NAME = "classifier_" + _MODEL_AUTOENCODER
 _LEARNING_RATE = 0.0005
 _DROP_RATE = 0.2
-_SHOW_SIZE = True
+_SHOW_SIZE = False
 _VERBOSE = 1 # 0 is silence 1 is process bar and 2 is result
 
 if __name__=="__main__":
-    plt.ion()
     print( "Survey directory of data")
     directory_handle = DirectoryHandle( _PATH_DATA )
     list_label , list_data = directory_handle.group_data()
@@ -110,7 +109,7 @@ if __name__=="__main__":
     Y_predict = classifier_model.predict( X_data )
     accuracy =  DataHandle.get_accuracy_classifier( Y_predict, 
                 np.array( Y_data ),
-                list_dictionary ) )
+                list_dictionary )
 
     print( f'====> Result of Model from {len(list_label)} label and {X_data.shape[0]} data')
     fig = plt.figure( "Accuracy of Classifier Model Name " + _MODEL_NAME )

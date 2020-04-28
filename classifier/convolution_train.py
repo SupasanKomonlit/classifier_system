@@ -120,14 +120,14 @@ _PATH_DATA = "/home/zeabus/Documents/supasan/2019_deep_learning/PokemonData"
 _CROP = True
 _COLOR = True
 _RATIO = 8
-_EPOCHES = 50
+_EPOCHES = 30
 _LATENT_SIZE = 1024
 _MODEL_NAME = "classifier_cnn3L1024D" # This will use to save model
 _LEARNING_RATE = 0.0005
 _DROP_RATE = 0.2
 _SHOW_SIZE = False
 _VERBOSE = 1 # 0 is silence 1 is process bar and 2 is result
-_ACTIVATION = None
+_ACTIVATION = "LeakyReLU"
 
 if __name__=="__main__":
     print( "Survey directory of data")
@@ -199,6 +199,7 @@ if __name__=="__main__":
             epochs = _EPOCHES,
             verbose = _VERBOSE )
 
+    print( f"Save model to {cnn_classifier_model.name}.h5")
     cnn_classifier_model.save( cnn_classifier_model.name + ".h5")
 
     fig_history_autoencoder = plt.figure( "History Training CNN Classifier Model " + _MODEL_NAME )

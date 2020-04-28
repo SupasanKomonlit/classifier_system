@@ -27,8 +27,8 @@ def plot_scatter( x , y , xlabel , ylabel , figname = None , figsize = None ):
     plt.scatter( x , y )
     plt.xlabel( xlabel )
     plt.ylabel( ylabel )
-    plt.show( block = False )
     plt.draw()
+#    plt.show( block = False )
 
 def plot_compare( data , model , figname = None , figsize = None , dest_type = int , picture = True ):
     n_to_show = len( data[0] ) 
@@ -65,4 +65,4 @@ def plot_compare( data , model , figname = None , figsize = None , dest_type = i
         sub.axis('off')        
         sub.imshow(img) 
     plt.draw()
-    plt.show( block = False )
+#    plt.show( block = False )

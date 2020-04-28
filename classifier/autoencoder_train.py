@@ -44,7 +44,7 @@ def model_encoder( input_dim, output_dim,
         if activation == None :
             None
         elif activation == "LeakyReLU":
-            decoder = LeakyReLU( alpha = 0.3,
+            encoder = LeakyReLU( alpha = 0.3,
                     name = prefix + "conv2d" + str( count ) + "_" + activation )( encoder )
         elif activation == "ReLU":
             encoder = ReLU( alpha = 0.3,
@@ -98,13 +98,13 @@ def model_decoder( input_dim, shape_before_flatten, output_channel,
         None
     elif activation == "LeakyReLU":
         decoder_output = LeakyReLU( alpha = 0.3,
-                name = prefix + "conv2dt" + str( count ) + "_" + activation )( decoder_output )
+                name = prefix + "output_" + activation )( decoder_output )
     elif activation == "ReLU":
         decoder_output = ReLU( alpha = 0.3,
-                name = prefix + "conv2dt" + str( count ) + "_" + activation )( decoder_output )
+                name = prefix + "output_" + activation )( decoder_output )
     else:
         decoder_output = Activation( activation ,
-                name = prefix + "conv2dt" + str( count ) + "_" + activation )( decoder_output )
+                name = prefix + "output_" + activation )( decoder_output )
 
     decoder_model = Model( decoder_input , decoder_output )
     decoder_model.name = prefix + "model"
@@ -118,12 +118,12 @@ _CROP = True
 _COLOR = True
 _RATIO = 8
 _EPOCHES = 30
-_LATENT_SIZE = 1024
-_MODEL_NAME = "autoencoder3L1024D" # This will use to save model
+_LATENT_SIZE = 512
+_MODEL_NAME = "autoencoder3L512DLeakyReLU" # This will use to save model
 _LEARNING_RATE = 0.0005
 _SHOW_SIZE = False
 _VERBOSE = 1 # 0 is silence 1 is process bar and 2 is result
-_ACTIVATION = None
+_ACTIVATION = "LeakyReLU"
 
 if __name__=="__main__":
     print( "Survey directory of data")

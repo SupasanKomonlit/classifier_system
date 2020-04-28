@@ -32,12 +32,18 @@ _PREFIX_MODEL = "classifier_"
 _LIST_MODEL = (
 #    "autoencoder3L64D" + _ACTIVATION_TYPE,# Classifier on Autoencoder 3 Layer and 64 Latent Vector
 #    "autoencoder3L128D" + _ACTIVATION_TYPE,# Classifier on Autoencoder 3 Layer and 128 Latent Vector
-#    "autoencoder3L256D" + _ACTIVATION_TYPE,# Classifier on Autoencoder 3 Layer and 256 Latent Vector
+    "autoencoder3L256D" + _ACTIVATION_TYPE,# Classifier on Autoencoder 3 Layer and 256 Latent Vector
     "autoencoder3L512D" + _ACTIVATION_TYPE,# Classifier on Autoencoder 3 Layer and 512 Latent Vector
     "autoencoder3L1024D" + _ACTIVATION_TYPE,# Classifier on Autoencoder 3 Layer and 1024 Latent Vector
+    "autoencoder3L256D",# Classifier on Autoencoder 3 Layer and 256 Latent Vector
+    "autoencoder3L512D",# Classifier on Autoencoder 3 Layer and 512 Latent Vector
+    "autoencoder3L1024D",# Classifier on Autoencoder 3 Layer and 1024 Latent Vector
 #    "cnn3L64D" + _ACTIVATION_TYPE, # Classifier on Autoencoder 3 Layer and 64 Latent Vector
 #    "cnn3L128D" + _ACTIVATION_TYPE, # Classifier on Autoencoder 3 Layer and 128 Latent Vector
-#    "cnn3L256D" + _ACTIVATION_TYPE, # Classifier on Autoencoder 3 Layer and 256 Latent Vector
+    "cnn3L256D", # Classifier on Autoencoder 3 Layer and 256 Latent Vector
+    "cnn3L512D", # Classifier on Autoencoder 3 Layer and 512 Latent Vector
+    "cnn3L1024D", # Classifier on Autoencoder 3 Layer and 1024 Latent Vector
+    "cnn3L256D" + _ACTIVATION_TYPE, # Classifier on Autoencoder 3 Layer and 256 Latent Vector
     "cnn3L512D" + _ACTIVATION_TYPE, # Classifier on Autoencoder 3 Layer and 512 Latent Vector
     "cnn3L1024D" + _ACTIVATION_TYPE # Classifier on Autoencoder 3 Layer and 1024 Latent Vector
 )
@@ -50,7 +56,6 @@ _SHOW_SIZE = False
 # Readme This file will can use only case model use all layers function for activation and calculate
 #   Base on Keras library
 if __name__ == "__main__":
-    plt.ion()
     model_classifier = []
     print( "Downloading model")
     for model_name in _LIST_MODEL:
@@ -98,5 +103,5 @@ if __name__ == "__main__":
     plt.xlabel( "Name Data Set")
     plt.ylabel( "Accuracy")
     plt.title( "Grap Accuracy Each Model")
-
+    plt.draw()
     plt.show()
