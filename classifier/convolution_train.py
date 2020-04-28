@@ -107,7 +107,7 @@ def model_connected( input_dim, output_dim, output_activation,
     connected_output = Dense( output_dim,
             name = prefix + "output" )( connected )
     connected_output = Activation( output_activation,
-                name = prefix + "output_" + activation )( connected_output )
+                name = prefix + "output_" + output_activation )( connected_output )
 
     connected_model = Model( connected_input , connected_output )
     connected_model.name = prefix + "model"
@@ -122,7 +122,7 @@ _COLOR = True
 _RATIO = 8
 _EPOCHES = 30
 _LATENT_SIZE = 1024
-_MODEL_NAME = "classifier_cnn3L1024D" # This will use to save model
+_MODEL_NAME = "classifier_cnn3L1024DLeakReLU" # This will use to save model
 _LEARNING_RATE = 0.0005
 _DROP_RATE = 0.2
 _SHOW_SIZE = False
