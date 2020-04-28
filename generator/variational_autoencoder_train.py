@@ -34,10 +34,10 @@ _PATH_DATA = "/home/zeabus/Documents/supasan/2019_deep_learning/AnimeFaceData"
 _CROP = True
 _COLOR = True
 _RATIO = 8
-_EPOCHES = 30
+_EPOCHES = 20
 _LATENT_SIZE = 1024
 _ACTIVATION = "relu"
-_MODEL_NAME = "VAE3L1024D" # This will use to save model
+_MODEL_NAME = "VAE3L1024D_1000" # This will use to save model
 if _ACTIVATION != None : _MODEL_NAME += _ACTIVATION
 _LEARNING_RATE = 0.0005 # For use in optimizer
 _SHOW_SIZE = False
@@ -223,7 +223,10 @@ if __name__ == "__main__":
     history = vae_autoencoder_model.fit( [ X_train ],
             [X_train],
             validation_data = ( [X_test] , [X_test] ),
-            epochs = _EPOCHES )
+            epochs = _EPOCHES,
+            verbose = _VERBOSE )
+
+    vae_autoencoder_model.save_weights( _MODEL_NAME + "_weights.h5" )
 
     fig_history_loss = plt.figure( "History Loss of Training Model " + _MODEL_NAME )
     # Plot traing & validation loss
@@ -255,9 +258,7 @@ if __name__ == "__main__":
     plt.legend(['Train', 'Test'], loc='upper left')
     plt.show( block = False )
 
-    vae_autoencoder_model.save_weights( _MODEL_NAME + "_weights.h5" )
-
-    sample_index = [ x for x in range( 0 , len( X_test ) , int( np.ceil( ) ) ) ]
+    sample_index = [ x for x in range( 0 , len( X_test ) , int( np.ceil( len( X_test ) / 4000 ) ) ) ]
     data = []
     for index in sample_index :
         data.append( X_test[ index ] )

@@ -81,7 +81,7 @@ def plot( data , model , figsize = None , dest_type = int ):
         width = result[run].shape[0] if width < result[run].shape[0] else width
         height = result[run].shape[1] if height < result[run].shape[1] else height
 
-    fig = plt.figure( "Result of mode name " + model.name, 
+    fig = plt.figure( "Result of model name " + model.name, 
             figsize = figsize if figsize != None else ( width , height ) )
     fig.subplots_adjust( hspace=0.1 , wspace=0.1 )
                                
