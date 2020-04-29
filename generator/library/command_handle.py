@@ -37,7 +37,7 @@ def plot_compare( data , model , figname = None , figsize = None , dest_type = i
     n_to_show = data.shape[0]
     n_column = 10
     n_offset = n_column * 2 
-    n_row = int( (floor( n_to_show / n_column ) + 1 ) * 2 ) 
+    n_row = int( (ceil( n_to_show / n_column ) ) * 2 ) 
     
     width = 0
     height = 0
@@ -46,12 +46,12 @@ def plot_compare( data , model , figname = None , figsize = None , dest_type = i
         height = data[run].shape[1] if height < data[run].shape[1] else height
 
     fig = plt.figure( figname,
-            figsize = figsize if figsize != None else ( width , height ) )
-    fig.subplots_adjust( hspace=0.1 , wspace=0.1 )
+            figsize = figsize if figsize != None else ( width  , height ) )
+    fig.subplots_adjust( hspace=0.01 , wspace=0.01 )
                                
     for i in range(n_to_show): 
 #        img = data[i].squeeze()
-        img = normalize_image( data[i] , copy = True , dest_type = float ).squeeze()
+        img = normalize_image( data[i] , copy = True , dest_type = dest_type ).squeeze()
         sub = fig.add_subplot( n_row , n_column, 
                 int( floor( i / n_column)*n_offset ) + ( i % n_column ) + 1)
         sub.axis('off')        
@@ -59,7 +59,7 @@ def plot_compare( data , model , figname = None , figsize = None , dest_type = i
                                
     for i in range(n_to_show): 
 #        img = result[i].squeeze()
-        img = normalize_image( result[i] , copy = True , dest_type = float ).squeeze()
+        img = normalize_image( result[i] , copy = True , dest_type = dest_type ).squeeze()
         sub = fig.add_subplot( n_row , n_column,
                 int( floor( i / n_column)*n_offset ) + ( n_column + ( i % n_column ) + 1 ) )
         sub.axis('off')        
@@ -72,8 +72,8 @@ def plot( data , model , figsize = None , dest_type = int ):
     
     n_to_show = result.shape[0]
     n_column = 10
-    n_offset = 10
-    n_row = int( (floor( n_to_show / n_column ) + 1 ) * 2 ) 
+    n_offset = n_column
+    n_row = int( ceil( n_to_show / n_column )  ) 
     
     width = 0
     height = 0
@@ -83,7 +83,7 @@ def plot( data , model , figsize = None , dest_type = int ):
 
     fig = plt.figure( "Result of model name " + model.name, 
             figsize = figsize if figsize != None else ( width , height ) )
-    fig.subplots_adjust( hspace=0.1 , wspace=0.1 )
+    fig.subplots_adjust( hspace=0.01 , wspace=0.01 )
                                
     for i in range(n_to_show): 
         img = normalize_image( result[i] , copy = True , dest_type = dest_type ).squeeze()

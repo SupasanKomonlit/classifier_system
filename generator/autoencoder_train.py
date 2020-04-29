@@ -1,6 +1,4 @@
-# File Name : variational_autoencoder_train.py
-# Main Reference : https://towardsdatascience.com/generating-new-faces-with-variational-autoencoders-d13cfcb5f0a8
-
+# Import Library help operation
 from library.directory_handle import DirectoryHandle
 import library.image_handle as ImageHandle
 import library.data_handle  as DataHandle
@@ -24,83 +22,45 @@ from keras.utils import plot_model
 # Import library for load model
 from keras.models import load_model
 # Import library operation in Keras tensor object
-from keras import backend as K
-K.clear_session()
+#from keras import backend as K
+#K.clear_session()
 #Import library for normal process
 import numpy as np
 
-# ================> Part Parameter Program
-_PATH_DATA = "/home/zeabus/Documents/supasan/2019_deep_learning/AnimeFaceData"
-_CROP = True
-_COLOR = True
-_RATIO = 8
-_EPOCHES = 20
-_LATENT_SIZE = 1024
-_ACTIVATION = "relu"
-_MODEL_NAME = "VAE3L1024D_1000" # This will use to save model
-if _ACTIVATION != None : _MODEL_NAME += _ACTIVATION
-_LEARNING_RATE = 0.0005 # For use in optimizer
-_SHOW_SIZE = False
-_VERBOSE = 1 # 0 is silence 1 is process bar and 2 is result
-_MEAN = 0
-_STDDEV = 1
-_LOSS_FACTOR = 1000 
-
-# ================> Part Function Creator Model
-
-def sampling( args ): # Function output of Variational Encoder
-    mean, variance = args
-    epsilon = K.random_normal( shape = K.shape( mean ), mean = _MEAN, stddev = _STDDEV )
-    return mean + K.exp( variance / 2 ) * epsilon
-
-def kl_loss( y_true , y_pred ):
-    loss = -0.5 * K.sum( 1 + variance_layer - K.square( mean_layer ) - K.exp( variance_layer ),
-            axis = 1 )
-    return loss
-
-def r_loss( y_true , y_pred ):
-    return K.mean( K.square( y_true - y_pred ), axis = [ 1 , 2 , 3 ] )
-
-def total_loss( y_true , y_pred ):
-    return _LOSS_FACTOR * r_loss( y_true , y_pred ) + kl_loss( y_true , y_pred )    
-
-def model_vae_encoder( input_dim, output_dim, 
+# ============================== MODEL CREATER FUNCTION ==========================================
+def model_encoder( input_dim, output_dim, 
         l_filters, l_kernels, l_strides, l_padding, 
-        prefix = "vae_encoder_" , activation = None ):
-    vae_encoder_input = Input( shape = input_dim , name = prefix + "input" )
-    vae_encoder = vae_encoder_input
+        prefix = "encoder_" , activation = None ):
+    encoder_input = Input( shape = input_dim , name = prefix + "input" )
+    encoder = encoder_input
     count = 0
     for filters , kernels, strides, padding in zip( l_filters, l_kernels, l_strides, l_padding ):
         count += 1
-        vae_encoder = Conv2D( filters = filters,
+        encoder = Conv2D( filters = filters,
                 kernel_size = kernels,
                 strides = strides,
                 padding = padding,
-                name = prefix + "conv2d" + str( count ) )( vae_encoder )
+                name = prefix + "conv2d" + str( count ) )( encoder )
         if activation == None :
             None
         elif activation == "LeakyReLU":
-            vae_encoder = LeakyReLU( alpha = 0.3,
-                    name = prefix + "conv2d" + str( count ) + "_" + activation )( vae_encoder )
+            encoder = LeakyReLU( alpha = 0.3,
+                    name = prefix + "conv2d" + str( count ) + "_" + activation )( encoder )
         elif activation == "ReLU":
-            vae_encoder = ReLU( alpha = 0.3,
-                    name = prefix + "conv2d" + str( count ) + "_" + activation )( vae_encoder )
+            encoder = ReLU( max_value = 1,
+                    name = prefix + "conv2d" + str( count ) + "_" + activation )( encoder )
         else:
-            vae_encoder = Activation( activation ,
-                    name = prefix + "conv2d" + str( count ) + "_" + activation )( vae_encoder )
+            encoder = Activation( activation ,
+                    name = prefix + "conv2d" + str( count ) + "_" + activation )( encoder )
+    encoder = Flatten( name = prefix + "flatten" )(encoder)
+    encoder_output = Dense( output_dim,
+                name = prefix + "output" )( encoder )
 
-    vae_encoder = Flatten( name = prefix + "flatten" )( vae_encoder )
+    encoder_model = Model( encoder_input , encoder_output )
+    encoder_model.name = prefix + "model"
+    shape_before_flatten = encoder_model.layers[ -3 ].output_shape[1:]
 
-    mean_layer = Dense( output_dim , name = prefix + "mean" )( vae_encoder )
-    variance_layer = Dense( output_dim , name = prefix + "variance" )( vae_encoder )    
-
-    vae_encoder_output = Lambda( sampling, name = prefix + "output" )( [ mean_layer, variance_layer] )
-
-    vae_encoder_model = Model( vae_encoder_input , vae_encoder_output )
-    vae_encoder_model.name = prefix + "model"
-    shape_before_flatten = vae_encoder_model.layers[ -5 ].output_shape[1:]
-
-    return vae_encoder_input, vae_encoder, vae_encoder_output, vae_encoder_model, shape_before_flatten, mean_layer, variance_layer
+    return encoder_input, encoder, encoder_output, encoder_model, shape_before_flatten
 
 def model_decoder( input_dim, shape_before_flatten, output_channel,
         l_filters, l_kernels, l_strides, l_padding, 
@@ -124,7 +84,7 @@ def model_decoder( input_dim, shape_before_flatten, output_channel,
             decoder = LeakyReLU( alpha = 0.3,
                     name = prefix + "conv2dt" + str( count ) + "_" + activation )( decoder )
         elif activation == "ReLU":
-            decoder = ReLU( alpha = 0.3,
+            decoder = ReLU( max_value = 1,
                     name = prefix + "conv2dt" + str( count ) + "_" + activation )( decoder )
         else:
             decoder = Activation( activation ,
@@ -149,12 +109,24 @@ def model_decoder( input_dim, shape_before_flatten, output_channel,
     decoder_model = Model( decoder_input , decoder_output )
     decoder_model.name = prefix + "model"
 
-    return decoder_input , decoder , decoder_output, decoder_model 
+    return decoder_input, decoder, decoder_output, decoder_model
 
-# ===================> PART MAIN PROGRAM
+# ============================ MAIN FUNCTION TO RUN PROGRAM =====================================+
+# =====> PARAMETER
+_PATH_DATA = "/home/zeabus/Documents/supasan/2019_deep_learning/AnimeFaceData"
+_CROP = True
+_COLOR = True
+_RATIO = 18
+_EPOCHES = 20
+_LATENT_SIZE = 1024
+_MODEL_NAME = "autoencoder3L1024Drelu" # This will use to save model
+_LEARNING_RATE = 0.0005
+_SHOW_SIZE = False
+_VERBOSE = 1 # 0 is silence 1 is process bar and 2 is result
+_ACTIVATION = "relu"
 
-if __name__ == "__main__":
-
+if __name__=="__main__":
+    print( "Survey directory of data")
     directory_handle = DirectoryHandle( _PATH_DATA )
     list_file = directory_handle.get_all_file()
 
@@ -173,19 +145,18 @@ if __name__ == "__main__":
     square_size = square_size if square_size % 2 == 0 else square_size + 1
     print( f'This program parameter to input image is\n\tColor Image : {_COLOR}\n\tCrop Image : {_CROP}\n\tSquare size : {square_size}')
 
-## START PART SETUP MODEL
-    print( f'Part Setup Model Object')
     input_dim = ( square_size , square_size , 3 if _COLOR else 1 )
-    vae_encoder_input, vae_encoder, vae_encoder_output, vae_encoder_model, shape_before_flatten, mean_layer, variance_layer= model_vae_encoder(
+    print( "Part Setup Model")
+    encoder_input, encoder, encoder_output, encoder_model, shape_before_flatten = model_encoder(
             input_dim = input_dim,
             output_dim = _LATENT_SIZE,
             l_filters = [ 64, 32, 16 ], 
             l_kernels = [ (3,3), (3,3), (3,3) ],
             l_strides = [ 1, 2, 1 ], 
             l_padding = ['same', 'same', 'same'],
-            prefix = "vae_encoder_",
+            prefix = "encoder_",
             activation = _ACTIVATION )
-    vae_encoder_model.summary()
+    encoder_model.summary()
 
     decoder_input, decoder, decoder_output, decoder_model = model_decoder(
             input_dim = _LATENT_SIZE,
@@ -199,12 +170,9 @@ if __name__ == "__main__":
             activation = _ACTIVATION )
     decoder_model.summary()
 
-    vae_autoencoder_model = Model( vae_encoder_input, 
-            decoder_model( vae_encoder_model( vae_encoder_input ) ) )
-    vae_autoencoder_model.name = _MODEL_NAME
-    vae_autoencoder_model.summary()
-
-## END PART SETUP MODEL
+    autoencoder_model = Model( encoder_input , decoder_model( encoder_model( encoder_input ) ) )
+    autoencoder_model.name = _MODEL_NAME
+    autoencoder_model.summary()
 
     print( f'Prepare Data')
     print( f'\tDowloading....' )
@@ -214,61 +182,53 @@ if __name__ == "__main__":
     X_train = np.array( X_train ).astype( float ) / 255
     X_test = np.array( X_test ).astype( float ) / 255
 
-    print( f'Start Training Model' )
+    # ========> Train autoencoder model
+    print( "\nPart Training Model")
     optimizer = Adam( lr = _LEARNING_RATE )
-    vae_autoencoder_model.compile( optimizer = optimizer,
-            loss = total_loss,
-            metrics = [ r_loss , kl_loss ] )
-
-    history = vae_autoencoder_model.fit( [ X_train ],
+    autoencoder_model.compile( optimizer = optimizer,
+            loss = 'mean_squared_error',
+            metrics = ['accuracy'] )
+    history = autoencoder_model.fit( [X_train],
             [X_train],
             validation_data = ( [X_test] , [X_test] ),
             epochs = _EPOCHES,
             verbose = _VERBOSE )
+    
+    print( f'Save Model to {autoencoder_model.name}.h5' )
+    autoencoder_model.save( autoencoder_model.name + ".h5" )
 
-    print( f'Save weights to {_MODEL_NAME}_weights.h5')
-    vae_autoencoder_model.save_weights( _MODEL_NAME + "_weights.h5" )
-
-    fig_history_loss = plt.figure( "History Loss of Training Model " + _MODEL_NAME )
-    # Plot traing & validation loss
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('Model Loss')
-    plt.ylabel('Loss')
-    plt.xlabel('Epoch')
-    plt.legend(['Train', 'Test'], loc='upper left')
+    fig_history_autoencoder = plt.figure( "History Training Autoencoder Model " + _MODEL_NAME )
+    fig_history_autoencoder.subplots_adjust( hspace=0.8 , wspace=0.1 )
+    sub = fig_history_autoencoder.add_subplot( 2 , 1 , 1 )
+    sub.plot( history.history['accuracy'] )
+    sub.plot( history.history['val_accuracy'] )
+    sub.set_title('Model accuracy')
+    sub.set_ylabel('Accuracy')
+    sub.set_xlabel('Epoch')
+    sub.legend(['Train', 'Test'], loc='upper left')
+    sub = fig_history_autoencoder.add_subplot( 2 , 1 , 2 )
+    sub.plot( history.history['loss'] )
+    sub.plot( history.history['val_loss'] )
+    sub.set_title('Model loss')
+    sub.set_ylabel('Loss')
+    sub.set_xlabel('Epoch')
+    sub.legend(['Train', 'Test'], loc='upper left')
     plt.show( block = False )
 
-    # Plot training & validation Mean Square loss values
-    fig_history_rms_loss = plt.figure( "History RMS Loss of Training Model " + _MODEL_NAME )
-    plt.plot(history.history['r_loss'])
-    plt.plot(history.history['val_r_loss'])
-    plt.title('Model Mean Square loss')
-    plt.ylabel('Mean Square Loss')
-    plt.xlabel('Epoch')
-    plt.legend(['Train', 'Test'], loc='upper left')
-    plt.show( block = False )
-
-    fig_history_kl_loss = plt.figure( "History KL Loss of Training Model " + _MODEL_NAME )
-    # Plot training & validation kl loss values
-    plt.plot(history.history['kl_loss'])
-    plt.plot(history.history['val_kl_loss'])
-    plt.title('Model KL loss')
-    plt.ylabel('KL Loss')
-    plt.xlabel('Epoch')
-    plt.legend(['Train', 'Test'], loc='upper left')
-    plt.show( block = False )
-
+#    random_index = []
+#    for _ in range(0,10):
+#        random_index.append( np.random.randint( len( X_test)))
+#    random_index = tuple( set( random_index ) )
     sample_index = [ x for x in range( 0 , len( X_test ) , int( np.ceil( len( X_test ) / 20 ) ) ) ]
     data = []
-    for index in sample_index :
+    for index in random_index :
         data.append( X_test[ index ] )
     data = np.array( data )
-    CommandHandle.plot_compare( data, vae_autoencoder_model,
-        figname = "Compare Result Autoencoder Model " + vae_autoencoder_model.name,
+    CommandHandle.plot_compare( data, autoencoder_model,
+        figname = "Compare Result Autoencoder Model " + autoencoder_model.name,
         dest_type = np.float )
 
     latent_random = np.random.normal( _MEAN , _STDDEV , size = ( 40, _LATENT_SIZE ) )
     CommandHandle.plot( latent_random , decoder_model , dest_type = float )
 
-    plt.show()
+    plt.show() 

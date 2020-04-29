@@ -51,9 +51,10 @@ _LOSS_FACTOR = 1000
 _CHECKPOINT_WEIGHTS = "GANWeightsCheckpoint.h5"
 _CHECKPOINT_BATCH = 20
 
-_ALL_ROUNDS = 2
+_ALL_ROUNDS = 20
 _OFFSET_ROUND = 0
 _SAMPLE_BATCH = 10
+_SAMPLE_RESULT = 5
 _SAMPLE_IMAGE = 5
 _CONTINUE_TRAIN = False 
 _BATCH_SIZE = 2048
@@ -279,6 +280,9 @@ if __name__ == "__main__":
     size_latent_vector = ( _BATCH_SIZE , _LATENT_SIZE )
     real_image = np.array( X_data ).astype( np.float ) / 255
 
+    discriminator_history = { 'loss' : [] , 'accuracy' }
+    gan_history = { 'loss' : [], 'accuracy' }
+
     for count_round in range( _ALL_ROUNDS ):
 
         discriminator_loss = []
@@ -304,16 +308,15 @@ if __name__ == "__main__":
             all_image = np.concatenate( [ real_image[ start : stop ] , fake_image ] )
             label_image = np.concatenate( [ np.ones( ( stop - start , 1 ) ) , np.zeros( ( _BATCH_SIZE , 1 ) ) ] )
             # Train discriminator_model
-            d_history = discriminator_model.fit( all_image , label_image, 
-                    epochs = _EPOCHES_DISCRIMINATOR , verbose = _VERBOSE )
+#            d_history = discriminator_model.fit( all_image , label_image, epochs = _EPOCHES_DISCRIMINATOR , verbose = _VERBOSE )
+            d_history = discriminator_model.train_on_batch( all_image , label_image )
             # Disable train discriminator_model
             discriminator_model.trainable = False
-            model_GAN_compile( GAN_model, discriminator_model , 
-                    GAN_optimizer, discriminator_optimizer )
+            model_GAN_compile( GAN_model, discriminator_model , GAN_optimizer, discriminator_optimizer )
             # Train generator_model
             latent_vector = np.random.normal( _MEAN, _STDDEV , size = size_latent_vector )
-            g_history = GAN_model.fit( latent_vector , np.ones( ( _BATCH_SIZE , 1 ) ),
-                    epochs = _EPOCHES_GENERATE, verbose = _VERBOSE )
+#            g_history = GAN_model.fit( latent_vector , np.ones( ( _BATCH_SIZE , 1 ) ), epochs = _EPOCHES_GENERATE, verbose = _VERBOSE )
+            g_history = GAN_model.train_on_batch( latent_vector , np.ones( ( _BATCH_SIZE , 1 ) ) )
             # Enable train discriminator_model
             discriminator_model.trainable = True
             model_GAN_compile( GAN_model, discriminator_model , 
@@ -322,18 +325,30 @@ if __name__ == "__main__":
             start = stop
             count_batch += 1
         
-            discriminator_loss += d_history.history[ 'loss' ]
-            discriminator_accuracy += d_history.history[ 'accuracy' ]
-            gan_loss += g_history.history[ 'loss' ]
-            gan_accuracy += g_history.history[ 'accuracy' ]
+#            discriminator_loss += d_history.history[ 'loss' ]
+#            discriminator_accuracy += d_history.history[ 'accuracy' ]
+#            gan_loss += g_history.history[ 'loss' ]
+#            gan_accuracy += g_history.history[ 'accuracy' ]
+            discriminator_loss.append( d_history[0] )
+            discriminator_accuracy.append( d_history[1] )
+            gan_loss.append( g_history[0] )
+            gan_accuracy.append( g_history[1] )
 
             if count_batch % _CHECKPOINT_BATCH == 0 :
                 print( f'Save weights to {_CHECKPOINT_WEIGHTS}' )
                 GAN_model.save_weights( _CHECKPOINT_WEIGHTS )
+
+            if count_batch % _SAMPLE_RESULT == 0 :
+                print( f'Summary mean value on {count_round + 1 }/{_ALL_ROUNDS} round in {count_batch+1}/{_BATCH_SIZE} batch' )
+                print( f'\tDiscriminator : Loss {np.mean( discriminator_loss ):10.5f } Accuracy {np.mean( discriminator_accuracy ) }' )
+                print( f'\tGenerator     : Loss {np.mean( gan_loss ):10.5f } Accuracy {np.mean( gan_accuracy ) }' )
         print( f'End {count_round + 1}/{_ALL_ROUNDS} accuracy point {np.mean( discriminator_accuracy ) } in discriminator and {np.mean( gan_accuracy ) } in generator' )
         print( f'Save weights to {_CHECKPOINT_WEIGHTS}' )
         GAN_model.save_weights( _CHECKPOINT_WEIGHTS )
-
+        gan_history['loss'].append( np.mean( gan_loss ) )
+        gan_history['accuracy'].append( np.mean( gan_accuracy ) )
+        discriminator_history['loss'].append( np.mean( discriminator_loss ) )
+        discriminator_history['accuracy'].append( np.mean( discriminator_accuracy ) )
     # End Index loop count round
 
     print( f'Finish train save weight to {_MODEL_NAME}.h5' )
