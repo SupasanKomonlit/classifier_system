@@ -124,6 +124,8 @@ _LEARNING_RATE = 0.0005
 _SHOW_SIZE = False
 _VERBOSE = 1 # 0 is silence 1 is process bar and 2 is result
 _ACTIVATION = "relu"
+_MEAN = 0
+_STDDEV = 1 
 
 if __name__=="__main__":
     print( "Survey directory of data")
@@ -221,7 +223,7 @@ if __name__=="__main__":
 #    random_index = tuple( set( random_index ) )
     sample_index = [ x for x in range( 0 , len( X_test ) , int( np.ceil( len( X_test ) / 20 ) ) ) ]
     data = []
-    for index in random_index :
+    for index in sample_index :
         data.append( X_test[ index ] )
     data = np.array( data )
     CommandHandle.plot_compare( data, autoencoder_model,

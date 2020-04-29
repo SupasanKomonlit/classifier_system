@@ -26,6 +26,7 @@ from keras.models import load_model
 # Import library operation in Keras tensor object
 from keras import backend as K
 K.clear_session()
+_CLEAR_SESSION = False
 #Import library for normal process
 import numpy as np
 import cv2
@@ -51,12 +52,12 @@ _LOSS_FACTOR = 1000
 _CHECKPOINT_WEIGHTS = "GANWeightsCheckpoint.h5"
 _CHECKPOINT_BATCH = 20
 
-_ALL_ROUNDS = 20
-_OFFSET_ROUND = 0
+_ALL_ROUNDS = 1
+_CONTINUE_TRAIN = True 
+_OFFSET_ROUND = 1
 _SAMPLE_BATCH = 10
 _SAMPLE_RESULT = 5
 _SAMPLE_IMAGE = 5
-_CONTINUE_TRAIN = False 
 _BATCH_SIZE = 2048
 
 # ================> Part Function Creater Model
@@ -198,7 +199,7 @@ def model_GAN( picture_shape ):
             output_dropout = 0.2,
             activation_dense = 'sigmoid',
             prefix = "discriminator_" )
-    group_discriminator[3].summary()
+#    group_discriminator[3].summary()
     group_generator = model_generator( input_dim = (_LATENT_SIZE, ),
             input_shape = shape_before_flatten,
             l_filters = [16, 32, 64], 
@@ -212,11 +213,11 @@ def model_GAN( picture_shape ):
             o_activation = _ACTIVATION,
             prefix = "generator_",
             activation = _ACTIVATION )
-    group_generator[3].summary()
+#    group_generator[3].summary()
 
     GAN_model = Model( group_generator[0] , group_discriminator[3]( group_generator[3]( group_generator[0] ) ) )
     GAN_model.name = _MODEL_NAME
-    GAN_model.summary()
+#    GAN_model.summary()
 
     return group_generator, group_discriminator, GAN_model
 
@@ -255,6 +256,9 @@ if __name__ == "__main__":
     group_generator , group_discriminator, GAN_model = model_GAN( input_dim )
     discriminator_model = group_discriminator[3]
     generator_model = group_generator[3]
+    generator_model.summary()
+    discriminator_model.summary()
+    GAN_model.summary()
 
     print( f'GAN_model layers    : {GAN_model.layers}' )
     print( f'generator_model     : {generator_model}' )
@@ -280,8 +284,8 @@ if __name__ == "__main__":
     size_latent_vector = ( _BATCH_SIZE , _LATENT_SIZE )
     real_image = np.array( X_data ).astype( np.float ) / 255
 
-    discriminator_history = { 'loss' : [] , 'accuracy' }
-    gan_history = { 'loss' : [], 'accuracy' }
+    discriminator_history = { 'loss' : [] , 'accuracy' : [] }
+    gan_history = { 'loss' : [], 'accuracy' : [] }
 
     for count_round in range( _ALL_ROUNDS ):
 
@@ -300,7 +304,7 @@ if __name__ == "__main__":
                 print( 'Save sample picture')
                 for count_image in range( 0 , _SAMPLE_IMAGE ):
                     name = "gan_image_round" + str( count_round + 1 + _OFFSET_ROUND ) + "_batch" + str( count_batch ) + "_" + str( count_image + 1 ) + ".jpg"
-                    cv2.imwrite( name , fake_image[ count_image ] )
+                    cv2.imwrite( name , ImageHandle.normalize_image( fake_image[ count_image ], copy = True, dest_type = int) )
 
             stop = start + _BATCH_SIZE
             if stop > real_image.shape[ 0 ] : stop = real_image.shape[0]
@@ -339,44 +343,59 @@ if __name__ == "__main__":
                 GAN_model.save_weights( _CHECKPOINT_WEIGHTS )
 
             if count_batch % _SAMPLE_RESULT == 0 :
-                print( f'Summary mean value on {count_round + 1 }/{_ALL_ROUNDS} round in {count_batch+1}/{_BATCH_SIZE} batch' )
-                print( f'\tDiscriminator : Loss {np.mean( discriminator_loss ):10.5f } Accuracy {np.mean( discriminator_accuracy ) }' )
-                print( f'\tGenerator     : Loss {np.mean( gan_loss ):10.5f } Accuracy {np.mean( gan_accuracy ) }' )
-        print( f'End {count_round + 1}/{_ALL_ROUNDS} accuracy point {np.mean( discriminator_accuracy ) } in discriminator and {np.mean( gan_accuracy ) } in generator' )
+                print( f'Summary mean value on {count_round + 1}/{_ALL_ROUNDS+_OFFSET_ROUND} round in {count_batch+1}/{round_batch} batch' )
+                print( f'==>Discriminator : Loss {np.mean( discriminator_loss ):10.5f} Accuracy {np.mean( discriminator_accuracy ):10.5f}' )
+                print( f'==>Generator     : Loss {np.mean( gan_loss ):10.5f} Accuracy {np.mean( gan_accuracy ):10.5f}' )
+        # End subloop train in batch
+        print( f'End {count_round + 1 + _OFFSET_ROUND}/{_ALL_ROUNDS} accuracy point {np.mean( discriminator_accuracy ) } in discriminator and {np.mean( gan_accuracy ) } in generator' )
         print( f'\tSaveing weights to {_CHECKPOINT_WEIGHTS}' )
         GAN_model.save_weights( _CHECKPOINT_WEIGHTS )
         print( f'\tSaveing sample picture')
         for count_image in range( 0 , _SAMPLE_IMAGE ):
-            name = "gan_image_end_round" + str( count_round + 1 + _OFFSET_ROUND ) + "_" str( count_image + 1 ) + ".jpg"
-            cv2.imwrite( name , fake_image[ count_image ] )
+            name = "gan_image_end_round" + str( count_round + 1 + _OFFSET_ROUND ) + "_" + str( count_image + 1 ) + ".jpg"
+            cv2.imwrite( name , ImageHandle.normalize_image( fake_image[ count_image ], copy = True, dest_type = int) )
         gan_history['loss'].append( gan_loss )
         gan_history['accuracy'].append( gan_accuracy )
         discriminator_history['loss'].append( discriminator_loss )
         discriminator_history['accuracy'].append( discriminator_accuracy )
+
+        if _CLEAR_SESSION :
+            print( "Clear Session on Resetup Model")
+            K.clear_session()
+            group_generator , group_discriminator, GAN_model = model_GAN( input_dim )
+            print( f'Download weights from {_CHECKPOINT_WEIGHTS}')
+            GAN_model.load_weights( _CHECKPOINT_WEIGHTS )
+            discriminator_model = group_discriminator[3]
+            generator_model = group_generator[3]
+#            print( f'GAN_model layers    : {GAN_model.layers}' )
+#            print( f'generator_model     : {generator_model}' )
+#            print( f'discriminator_model : {discriminator_model}' )
+            model_GAN_compile( GAN_model, discriminator_model, GAN_optimizer, discriminator_optimizer )
     # End Index loop count round
 
     print( f'Finish train save weight to {_MODEL_NAME}.h5' )
     GAN_model.save_weights( _MODEL_NAME + ".h5" )
-
+    latent_random = np.random.normal( _MEAN, _STDDEV , size = ( 10 , _LATENT_SIZE ) )
+    CommandHandle.plot( latent_random , generator_model , dest_type = float ) 
+# Ploting part
     fig_history = []
-    for rounds in range( _ALL_ROUNDS )
-        fig_history.append( plt.figure( "History Training GAN Model " + _MODEL_NAME + " on Round " + str( rounds ) ) )
+    for rounds in range( _ALL_ROUNDS ):
+        fig_history.append( plt.figure( "History Training GAN Model " + _MODEL_NAME + " on Round " + str( rounds + _OFFSET_ROUND ) ) )
         fig_history[ rounds ].subplots_adjust( hspace=0.8 , wspace=0.1 )
         sub = fig_history[ rounds ].add_subplot( 2 , 1 , 1 )
         sub.plot( gan_history['accuracy'][rounds] )
         sub.plot( discriminator_history['accuracy'][rounds] )
-        sub.set_title('Model accuracy')
+        sub.set_title('Model Accuracy Round ' + str( rounds + _OFFSET_ROUND + 1 ) )
         sub.set_ylabel('Accuracy')
         sub.set_xlabel('Order Batch')
         sub.legend(['Generator', 'Discriminator'], loc='upper left')
         sub = fig_history[ rounds ].add_subplot( 2 , 1 , 2 )
         sub.plot( gan_history['loss'][rounds] )
         sub.plot( discriminator_history['loss'][rounds] )
-        sub.set_title('Model loss')
+        sub.set_title('Model Loss Round ' + str( rounds + _OFFSET_ROUND + 1 ) )
         sub.set_ylabel('Loss')
         sub.set_xlabel('Order Batch')
         sub.legend(['Generator', 'Discriminator'], loc='upper left')
         plt.show( block = False )
-
-    latent_random = np.random.normal( _MEAN, _STDDEV , size = ( 10 , latent_size ) )
-    DataHandle.plot( latent_random , generator_model , dest_type = float ) 
+# End ploting part
+    plt.show()
