@@ -4,19 +4,30 @@
 # REFERENCE
 #   ref01 : https://docs.python.org/3/tutorial/inputoutput.html
 
-from directory_handle import DirectoryHandle
+from library.directory_handle import DirectoryHandle
+import library.image_handle as ImageHandle
+import library.command_handle as CommandHandle
+import matplotlib.pyplot as plt
 
-import image_handle 
-
-PATH_DATA = "/home/zeabus/Documents/supasan/2019_deep_learning/PokemonData"
+_PATH_DATA = "/home/zeabus/Documents/supasan/2019_deep_learning/PokemonData"
+_SHOW_SIZE = True
 
 if __name__ == "__main__":
 
 # First get all file name in patter full path
-    print( "Focus on : " + PATH_DATA )
-    directory_handle = DirectoryHandle( PATH_DATA )
+    print( "Survey directory of data")
+    directory_handle = DirectoryHandle( _PATH_DATA )
     list_label , list_data = directory_handle.group_data()
-    print( f'\tData {len(list_label)} groups and {sum([len(data) for data in list_data])} pictures') 
+    list_dictionary = directory_handle.group_dictionary()
 
-    smallest_size = image_handle.min_all_square_size1( list_data )
-    print( f'\tSuggest square size small at size {smallest_size}')
+    if _SHOW_SIZE : 
+        width = []
+        height = []
+        for data in list_data:
+            width , height = ImageHandle.read_size( data , width, height )
+
+        CommandHandle.plot_scatter( width , height, 
+                "width (pixel)" , "height (pixel)", 
+                figname = "picture_size")
+
+    plt.show()
