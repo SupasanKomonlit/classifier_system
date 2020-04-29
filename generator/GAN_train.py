@@ -299,7 +299,7 @@ if __name__ == "__main__":
             if count_batch % _SAMPLE_BATCH == 0 :
                 print( 'Save sample picture')
                 for count_image in range( 0 , _SAMPLE_IMAGE ):
-                    name = "gan_image" + str( count_image + 1 ) + "_round" + str( count_round + 1 + _OFFSET_ROUND ) + "_batch" + str( count_batch ) + ".jpg"
+                    name = "gan_image_round" + str( count_round + 1 + _OFFSET_ROUND ) + "_batch" + str( count_batch ) + "_" + str( count_image + 1 ) + ".jpg"
                     cv2.imwrite( name , fake_image[ count_image ] )
 
             stop = start + _BATCH_SIZE
@@ -343,16 +343,40 @@ if __name__ == "__main__":
                 print( f'\tDiscriminator : Loss {np.mean( discriminator_loss ):10.5f } Accuracy {np.mean( discriminator_accuracy ) }' )
                 print( f'\tGenerator     : Loss {np.mean( gan_loss ):10.5f } Accuracy {np.mean( gan_accuracy ) }' )
         print( f'End {count_round + 1}/{_ALL_ROUNDS} accuracy point {np.mean( discriminator_accuracy ) } in discriminator and {np.mean( gan_accuracy ) } in generator' )
-        print( f'Save weights to {_CHECKPOINT_WEIGHTS}' )
+        print( f'\tSaveing weights to {_CHECKPOINT_WEIGHTS}' )
         GAN_model.save_weights( _CHECKPOINT_WEIGHTS )
-        gan_history['loss'].append( np.mean( gan_loss ) )
-        gan_history['accuracy'].append( np.mean( gan_accuracy ) )
-        discriminator_history['loss'].append( np.mean( discriminator_loss ) )
-        discriminator_history['accuracy'].append( np.mean( discriminator_accuracy ) )
+        print( f'\tSaveing sample picture')
+        for count_image in range( 0 , _SAMPLE_IMAGE ):
+            name = "gan_image_end_round" + str( count_round + 1 + _OFFSET_ROUND ) + "_" str( count_image + 1 ) + ".jpg"
+            cv2.imwrite( name , fake_image[ count_image ] )
+        gan_history['loss'].append( gan_loss )
+        gan_history['accuracy'].append( gan_accuracy )
+        discriminator_history['loss'].append( discriminator_loss )
+        discriminator_history['accuracy'].append( discriminator_accuracy )
     # End Index loop count round
 
     print( f'Finish train save weight to {_MODEL_NAME}.h5' )
     GAN_model.save_weights( _MODEL_NAME + ".h5" )
+
+    fig_history = []
+    for rounds in range( _ALL_ROUNDS )
+        fig_history.append( plt.figure( "History Training GAN Model " + _MODEL_NAME + " on Round " + str( rounds ) ) )
+        fig_history[ rounds ].subplots_adjust( hspace=0.8 , wspace=0.1 )
+        sub = fig_history[ rounds ].add_subplot( 2 , 1 , 1 )
+        sub.plot( gan_history['accuracy'][rounds] )
+        sub.plot( discriminator_history['accuracy'][rounds] )
+        sub.set_title('Model accuracy')
+        sub.set_ylabel('Accuracy')
+        sub.set_xlabel('Order Batch')
+        sub.legend(['Generator', 'Discriminator'], loc='upper left')
+        sub = fig_history[ rounds ].add_subplot( 2 , 1 , 2 )
+        sub.plot( gan_history['loss'][rounds] )
+        sub.plot( discriminator_history['loss'][rounds] )
+        sub.set_title('Model loss')
+        sub.set_ylabel('Loss')
+        sub.set_xlabel('Order Batch')
+        sub.legend(['Generator', 'Discriminator'], loc='upper left')
+        plt.show( block = False )
 
     latent_random = np.random.normal( _MEAN, _STDDEV , size = ( 10 , latent_size ) )
     DataHandle.plot( latent_random , generator_model , dest_type = float ) 
