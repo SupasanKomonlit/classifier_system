@@ -34,17 +34,17 @@ _PATH_DATA = "/home/zeabus/Documents/supasan/2019_deep_learning/AnimeFaceData"
 _CROP = True
 _COLOR = True
 _RATIO = 8
-_EPOCHES = 20
+_EPOCHES = 10
 _LATENT_SIZE = 1024
 _ACTIVATION = "relu"
-_MODEL_NAME = "VAE3L1024D_1000" # This will use to save model
+_MODEL_NAME = "VAE3L1024D_500" # This will use to save model
 if _ACTIVATION != None : _MODEL_NAME += _ACTIVATION
 _LEARNING_RATE = 0.0005 # For use in optimizer
 _SHOW_SIZE = False
 _VERBOSE = 1 # 0 is silence 1 is process bar and 2 is result
 _MEAN = 0
 _STDDEV = 1
-_LOSS_FACTOR = 1000 
+_LOSS_FACTOR = 500 
 
 # ================> Part Function Creator Model
 

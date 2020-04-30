@@ -54,7 +54,7 @@ _MEAN = 0
 _STDDEV = 1
 _CHECKPOINT_WEIGHTS = "GANWeightsCheckpoint.h5"
 
-_ALL_ROUNDS = 2
+_ALL_ROUNDS = 10
 _CONTINUE_TRAIN = False 
 _OFFSET_ROUND = 0
 _SAMPLE_RESULT = 5
@@ -397,7 +397,7 @@ if __name__ == "__main__":
     # End Index loop count round
 
     print( f'Finish train save weight to {_MODEL_NAME}.h5' )
-    GAN_model.save_weights( _MODEL_NAME + ".h5" )
+    GAN_model.save_weights( _MODEL_NAME + "_weights.h5" )
     latent_random = np.random.normal( _MEAN, _STDDEV , size = ( 10 , _LATENT_SIZE ) )
     CommandHandle.plot( latent_random , generator_model , dest_type = float ) 
 # Ploting part
