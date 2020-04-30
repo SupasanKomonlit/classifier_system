@@ -53,7 +53,7 @@ _LIST_MODEL = (
 )
 
 _PATH_DATA = "/home/zeabus/Documents/supasan/2019_deep_learning/PokemonData"
-_CROP = True
+_CROP = False
 _COLOR = True
 _SHOW_SIZE = False
 
