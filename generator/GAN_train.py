@@ -55,8 +55,8 @@ _STDDEV = 1
 _CHECKPOINT_WEIGHTS = "GANWeightsCheckpoint.h5"
 
 _ALL_ROUNDS = 10
-_CONTINUE_TRAIN = False 
-_OFFSET_ROUND = 0
+_CONTINUE_TRAIN = True 
+_OFFSET_ROUND = 10
 _SAMPLE_RESULT = 5
 _SAMPLE_BATCH = int( _SAMPLE_RESULT * 2 ) # Save Example Picture
 _CHECKPOINT_BATCH = int( _SAMPLE_BATCH * 4 ) # Save Model Weights
