@@ -27,9 +27,13 @@ from keras.models import load_model
 from keras import backend as K
 K.clear_session()
 _CLEAR_SESSION = False
+from keras.utils.generic_utils import Progbar
 #Import library for normal process
 import numpy as np
 import cv2
+
+# Import tensorflow for train by my self
+import tensorflow as tf
 
 # ================> Part Parameter Program
 _PATH_DATA = "/home/zeabus/Documents/supasan/2019_deep_learning/AnimeFaceData"
@@ -48,17 +52,16 @@ _SHOW_SIZE = False
 _VERBOSE = 1 # 0 is silence 1 is process bar and 2 is result
 _MEAN = 0
 _STDDEV = 1
-_LOSS_FACTOR = 1000
 _CHECKPOINT_WEIGHTS = "GANWeightsCheckpoint.h5"
-_CHECKPOINT_BATCH = 20
 
-_ALL_ROUNDS = 1
-_CONTINUE_TRAIN = True 
-_OFFSET_ROUND = 1
-_SAMPLE_BATCH = 10
+_ALL_ROUNDS = 2
+_CONTINUE_TRAIN = False 
+_OFFSET_ROUND = 0
 _SAMPLE_RESULT = 5
-_SAMPLE_IMAGE = 5
-_BATCH_SIZE = 2048
+_SAMPLE_BATCH = int( _SAMPLE_RESULT * 2 ) # Save Example Picture
+_CHECKPOINT_BATCH = int( _SAMPLE_BATCH * 4 ) # Save Model Weights
+_SAMPLE_IMAGE = 1
+_BATCH_SIZE = 32
 
 # ================> Part Function Creater Model
 ## function model generator have arguments are 
@@ -199,6 +202,17 @@ def model_GAN( picture_shape ):
             output_dropout = 0.2,
             activation_dense = 'sigmoid',
             prefix = "discriminator_" )
+    group_GAN_discriminator , shape_before_flatten = model_discriminator( input_dim = picture_shape,
+            l_filters = [64, 32, 16 ],
+            l_kernel = [(3,3), (3,3), (3,3)],
+            l_strides = [1, 2, 1],
+            l_padding = ['same', 'same', 'same' ],
+            activation_conv2d = _ACTIVATION,
+            l_units = [ _LATENT_SIZE ],
+            l_dropout = [ 0.2 ],
+            output_dropout = 0.2,
+            activation_dense = 'sigmoid',
+            prefix = "GAN_discriminator_" )
 #    group_discriminator[3].summary()
     group_generator = model_generator( input_dim = (_LATENT_SIZE, ),
             input_shape = shape_before_flatten,
@@ -214,8 +228,8 @@ def model_GAN( picture_shape ):
             prefix = "generator_",
             activation = _ACTIVATION )
 #    group_generator[3].summary()
-
-    GAN_model = Model( group_generator[0] , group_discriminator[3]( group_generator[3]( group_generator[0] ) ) )
+    group_GAN_discriminator[ 3 ].trainable = False
+    GAN_model = Model( group_generator[0] , group_GAN_discriminator[3]( group_generator[3]( group_generator[0] ) ) )
     GAN_model.name = _MODEL_NAME
 #    GAN_model.summary()
 
@@ -268,6 +282,7 @@ if __name__ == "__main__":
     discriminator_optimizer = RMSprop( lr = _LEARNING_DISCRIMINATOR )
 
     model_GAN_compile( GAN_model, discriminator_model, GAN_optimizer, discriminator_optimizer )
+#    GAN_model.compile( optimizer = GAN_optimizer, loss = 'binary_crossentropy', metrics = [ 'accuracy' ] )
 ## END PART SETUP MODEL
 
     print( f'Prepare Data')
@@ -286,7 +301,6 @@ if __name__ == "__main__":
 
     discriminator_history = { 'loss' : [] , 'accuracy' : [] }
     gan_history = { 'loss' : [], 'accuracy' : [] }
-
     for count_round in range( _ALL_ROUNDS ):
 
         discriminator_loss = []
@@ -296,12 +310,12 @@ if __name__ == "__main__":
     
         start = 0
         count_batch = 0
+        progress_bar = Progbar( target = round_batch )
         while( start < real_image.shape[0] ):
-
             latent_vector = np.random.normal( _MEAN, _STDDEV , size = size_latent_vector )
             fake_image = generator_model.predict( latent_vector )
             if count_batch % _SAMPLE_BATCH == 0 :
-                print( 'Save sample picture')
+#                print( 'Save sample picture')
                 for count_image in range( 0 , _SAMPLE_IMAGE ):
                     name = "gan_image_round" + str( count_round + 1 + _OFFSET_ROUND ) + "_batch" + str( count_batch ) + "_" + str( count_image + 1 ) + ".jpg"
                     cv2.imwrite( name , ImageHandle.normalize_image( fake_image[ count_image ], copy = True, dest_type = int) )
@@ -313,21 +327,29 @@ if __name__ == "__main__":
             label_image = np.concatenate( [ np.ones( ( stop - start , 1 ) ) , np.zeros( ( _BATCH_SIZE , 1 ) ) ] )
             # Train discriminator_model
 #            d_history = discriminator_model.fit( all_image , label_image, epochs = _EPOCHES_DISCRIMINATOR , verbose = _VERBOSE )
+            #print( "Train discriminator")
+            #print( discriminator_model.get_weights()[0][0][0][0] )
             d_history = discriminator_model.train_on_batch( all_image , label_image )
+            #print( "After train discriminator")
+            #print( discriminator_model.get_weights()[0][0][0][0] )
             # Disable train discriminator_model
-            discriminator_model.trainable = False
-            model_GAN_compile( GAN_model, discriminator_model , GAN_optimizer, discriminator_optimizer )
+#            discriminator_model.trainable = False
+#            model_GAN_compile( GAN_model, discriminator_model , GAN_optimizer, discriminator_optimizer )
             # Train generator_model
+            GAN_model.layers[ -1 ].set_weights( discriminator_model.get_weights() )
+            #print( GAN_model.layers[-1].get_weights()[0][0][0][0] )
             latent_vector = np.random.normal( _MEAN, _STDDEV , size = size_latent_vector )
 #            g_history = GAN_model.fit( latent_vector , np.ones( ( _BATCH_SIZE , 1 ) ), epochs = _EPOCHES_GENERATE, verbose = _VERBOSE )
             g_history = GAN_model.train_on_batch( latent_vector , np.ones( ( _BATCH_SIZE , 1 ) ) )
+            #print( "After train GAN")
+            #print( discriminator_model.get_weights()[0][0][0][0] )
             # Enable train discriminator_model
-            discriminator_model.trainable = True
-            model_GAN_compile( GAN_model, discriminator_model , 
-                    GAN_optimizer, discriminator_optimizer )
+#            discriminator_model.trainable = True
+#            model_GAN_compile( GAN_model, discriminator_model , GAN_optimizer, discriminator_optimizer )
 
             start = stop
             count_batch += 1
+            progress_bar.update( count_batch )
         
 #            discriminator_loss += d_history.history[ 'loss' ]
 #            discriminator_accuracy += d_history.history[ 'accuracy' ]
@@ -339,15 +361,16 @@ if __name__ == "__main__":
             gan_accuracy.append( g_history[1] )
 
             if count_batch % _CHECKPOINT_BATCH == 0 :
-                print( f'Save weights to {_CHECKPOINT_WEIGHTS}' )
+#                print( f'Save weights to {_CHECKPOINT_WEIGHTS}' )
                 GAN_model.save_weights( _CHECKPOINT_WEIGHTS )
 
-            if count_batch % _SAMPLE_RESULT == 0 :
-                print( f'Summary mean value on {count_round + 1}/{_ALL_ROUNDS+_OFFSET_ROUND} round in {count_batch+1}/{round_batch} batch' )
-                print( f'==>Discriminator : Loss {np.mean( discriminator_loss ):10.5f} Accuracy {np.mean( discriminator_accuracy ):10.5f}' )
-                print( f'==>Generator     : Loss {np.mean( gan_loss ):10.5f} Accuracy {np.mean( gan_accuracy ):10.5f}' )
+#            if count_batch % _SAMPLE_RESULT == 0 :
+#                print( f'Summary mean value on {count_round + 1 + _OFFSET_ROUND}/{_ALL_ROUNDS +_OFFSET_ROUND} round in {count_batch+1}/{round_batch} batch' )
+#                print( f'==>Discriminator : Loss {np.mean( discriminator_loss ):10.5f} Accuracy {np.mean( discriminator_accuracy ):10.5f}' )
+#                print( f'==>Generator     : Loss {np.mean( gan_loss ):10.5f} Accuracy {np.mean( gan_accuracy ):10.5f}' )
         # End subloop train in batch
-        print( f'End {count_round + 1 + _OFFSET_ROUND}/{_ALL_ROUNDS} accuracy point {np.mean( discriminator_accuracy ) } in discriminator and {np.mean( gan_accuracy ) } in generator' )
+
+        print( f'End {count_round + 1 + _OFFSET_ROUND}/{_ALL_ROUNDS + _OFFSET_ROUND} accuracy point {np.mean( discriminator_accuracy ) } in discriminator and {np.mean( gan_accuracy ) } in generator' )
         print( f'\tSaveing weights to {_CHECKPOINT_WEIGHTS}' )
         GAN_model.save_weights( _CHECKPOINT_WEIGHTS )
         print( f'\tSaveing sample picture')
@@ -380,7 +403,7 @@ if __name__ == "__main__":
 # Ploting part
     fig_history = []
     for rounds in range( _ALL_ROUNDS ):
-        fig_history.append( plt.figure( "History Training GAN Model " + _MODEL_NAME + " on Round " + str( rounds + _OFFSET_ROUND ) ) )
+        fig_history.append( plt.figure( "History Training GAN Model " + _MODEL_NAME + " on Round " + str( rounds + _OFFSET_ROUND + 1 ) ) )
         fig_history[ rounds ].subplots_adjust( hspace=0.8 , wspace=0.1 )
         sub = fig_history[ rounds ].add_subplot( 2 , 1 , 1 )
         sub.plot( gan_history['accuracy'][rounds] )

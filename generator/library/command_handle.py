@@ -67,7 +67,7 @@ def plot_compare( data , model , figname = None , figsize = None , dest_type = i
     plt.draw()
 #    plt.show( block = False )
 
-def plot( data , model , figsize = None , dest_type = int ):
+def plot( data , model , figsize = None , dest_type = int , save = None ):
     result = model.predict( data ).astype( dest_type )
     
     n_to_show = result.shape[0]
@@ -91,4 +91,7 @@ def plot( data , model , figsize = None , dest_type = int ):
                 int( floor( i / n_column)*n_offset ) + ( i % n_column ) + 1)
         sub.axis('off')        
         sub.imshow(img)
+    if save != None:
+        plt.savefig( save )
+        plt.show( block = False )
     plt.draw() 
