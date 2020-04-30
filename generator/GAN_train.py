@@ -55,7 +55,7 @@ _STDDEV = 1
 _CHECKPOINT_WEIGHTS = "GANWeightsCheckpoint.h5"
 
 _ALL_ROUNDS = 10
-_CONTINUE_TRAIN = True 
+_CONTINUE_TRAIN = False 
 _OFFSET_ROUND = 10
 _SAMPLE_RESULT = 5
 _SAMPLE_BATCH = int( _SAMPLE_RESULT * 2 ) # Save Example Picture
@@ -294,6 +294,7 @@ if __name__ == "__main__":
     if _CONTINUE_TRAIN:
         print( f'Download initial weights from {_CHECKPOINT_WEIGHTS}' )
         GAN_model.load_weights( _CHECKPOINT_WEIGHTS )
+        discriminator_model.set_weights( GAN_model.layers[-1].get_weights() )
 
     round_batch = int( np.ceil( len( X_data ) / _BATCH_SIZE ) )
     size_latent_vector = ( _BATCH_SIZE , _LATENT_SIZE )
